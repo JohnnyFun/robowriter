@@ -1,116 +1,87 @@
-<?php
 
-/**
- * This class represents SVG pa
- * @author Łukasz Ledóchowski lukasz@ledochowski.pl
- * @version 0.1
- */
+// inspired by: https://stackoverflow.com/questions/7742148/how-to-convert-text-to-svg-paths
 class SVGFont {
+    font = {}
+    glyphs = {}
 
-    protected $id = '';
-    protected $horizAdvX = 0;
-    protected $unitsPerEm = 0;
-    protected $ascent = 0;
-    protected $descent = 0;
-    protected $glyphs = array();
+    constructor(svgString) {
+        this._parseSVGInfo(svgString)
+    }
+    
+    _parseSVGInfo(svgString) {
+        // skip anything before the opening svg tag
+        this.svgString = svgString.slice(svgString.indexOf('<svg'))
+        const parser = new DOMParser()
+        const svgElement = parser.parseFromString(svgString, 'image/svg+xml')
 
-    /**
-     * Function takes UTF-8 encoded string and returns unicode number for every character.
-     * Copied somewhere from internet, thanks.
-     */
-    function utf8ToUnicode( $str ) {
-        $unicode = array();
-        $values = array();
-        $lookingFor = 1;
-
-        for ($i = 0; $i < strlen( $str ); $i++ ) {
-            $thisValue = ord( $str[ $i ] );
-            if ( $thisValue < 128 ) $unicode[] = $thisValue;
-            else {
-                if ( count( $values ) == 0 ) $lookingFor = ( $thisValue < 224 ) ? 2 : 3;
-                $values[] = $thisValue;
-                if ( count( $values ) == $lookingFor ) {
-                    $number = ( $lookingFor == 3 ) ?
-                        ( ( $values[0] % 16 ) * 4096 ) + ( ( $values[1] % 64 ) * 64 ) + ( $values[2] % 64 ):
-                        ( ( $values[0] % 32 ) * 64 ) + ( $values[1] % 64 );
-
-                    $unicode[] = $number;
-                    $values = array();
-                    $lookingFor = 1;
-                }
-            }
+        const font = svgElement.querySelector('font')
+        if (font) {
+            this._eachAttr(font.attributes, (n, v) => this.font[n] = v)
+        }
+        
+        const fontface = svgElement.querySelector('font-face')
+        if (fontface) {
+            this.font.fontFace = {}
+            this._eachAttr(fontface.attributes, (n, v) => this.font.fontFace[n] = v)
         }
 
-        return $unicode;
+        const glyphs = svgElement.querySelectorAll('glyph')
+        if (glyphs) {
+            if (glyphs.length === 0)
+                throw new Error('No glyphs found in this svg')
+            for (let i = 0; i < glyphs.length; i++) {
+                const glyph = glyphs[i]
+                const charAttr = 'unicode'
+                const char = glyph.getAttribute(charAttr) || glyph.getAttribute('glyph-name')
+                this.glyphs[char] = {}
+                this._eachAttr(glyph.attributes, (n, v) => n !== charAttr ? this.glyphs[char][n] = v : null)
+            }
+        }
     }
 
-    /**
-     * Function takes path to SVG font (local path) and processes its xml
-     * to get path representation of every character and additional
-     * font parameters
-     */
-    public function load($filename) {
-        $this->glyphs = array();
-        $z = new XMLReader;
-        $z->open($filename);
-
-        // move to the first <product /> node
-        while ($z->read()) {
-            $name = $z->name;
-
-            if ($z->nodeType == XMLReader::ELEMENT) {
-                if ($name == 'font') {
-                    $this->id = $z->getAttribute('id');
-                    $this->horizAdvX = $z->getAttribute('horiz-adv-x');
-                }
-
-                if ($name == 'font-face') {
-                    $this->unitsPerEm = $z->getAttribute('units-per-em');
-                    $this->ascent = $z->getAttribute('ascent');
-                    $this->descent = $z->getAttribute('descent');
-                }
-
-                if ($name == 'glyph') {
-                    $unicode = $z->getAttribute('unicode');
-                    $unicode = $this->utf8ToUnicode($unicode);
-                    $unicode = $unicode[0];
-
-                    $this->glyphs[$unicode] = new stdClass();
-                    $this->glyphs[$unicode]->horizAdvX = $z->getAttribute('horiz-adv-x');
-                    if (empty($this->glyphs[$unicode]->horizAdvX)) {
-                        $this->glyphs[$unicode]->horizAdvX = $this->horizAdvX;
-                    }
-                    $this->glyphs[$unicode]->d = $z->getAttribute('d');
-                }
-            }
+    _eachAttr(attributes, callback) {
+        for (let i = 0; i < attributes.length; i++) {
+            const attr = attributes[i]
+            const numericAttributeNames = [
+                'horiz-adv-x',
+                'units-per-em',
+                'ascent',
+                'descent'
+            ]
+            const val = numericAttributeNames.some(a => a === attr.name) ? parseFloat(attr.value) : attr.value
+            callback(attr.name, val)
         }
-
     }
 
-    /**
-     * Function takes UTF-8 encoded string and size, returns xml for SVG paths representing this string.
-     * @param string $text UTF-8 encoded text
-     * @param int $asize size of requested text
-     * @return string xml for text converted into SVG paths
-     */
-    public function textToPaths($text, $asize) {
-        $lines = explode("\n", $text);
-        $result = "";
-        $horizAdvY = 0;
-        foreach($lines as $text) {
-            $text = $this->utf8ToUnicode($text);
-            $size =  ((float)$asize) / $this->unitsPerEm;
-            $result .= "<g transform=\"scale({$size}) translate(0, {$horizAdvY})\">";
-            $horizAdvX = 0;
-            for($i = 0; $i < count($text); $i++) {
-                $letter = $text[$i];
-                $result .= "<path transform=\"translate({$horizAdvX},{$horizAdvY}) rotate(180) scale(-1, 1)\" d=\"{$this->glyphs[$letter]->d}\" />";
-                $horizAdvX += $this->glyphs[$letter]->horizAdvX;
+    // returns xml for SVG paths representing this the given string and size
+    textToPaths(text, fontSize) {
+        const unitsPerEm = this.font.fontFace['units-per-em']
+        const ascent = this.font.fontFace.ascent
+        const descent = this.font.fontFace.descent
+        const size = fontSize / unitsPerEm
+        const lines = text.split('\n')
+        let result = ''
+        let horizAdvY = 0
+        lines.forEach(line => {
+            result += `<g transform=\"translate(0, ${horizAdvY}) scale(${size})\">`
+            let horizAdvX = 0
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                const glyph = this.glyphs[char]
+                if (glyph == null) {
+                    console.warn(`Did not find glyph for "${char}"`)
+                    continue
+                }
+                // if (glyph.d == null) {
+                //     console.warn(`Did not find "d" for glyph char "${char}"`)
+                //     continue
+                // }
+                result += `<path transform=\"translate(${horizAdvX},${horizAdvY}) rotate(180) scale(-1, 1)\" d=\"${this.glyphs[char].d || ''}\" />`
+                horizAdvX += this.glyphs[char]['horiz-adv-x'] || 1000
             }
-            $result .= "</g>";
-            $horizAdvY += $this->ascent + $this->descent;
-        }
-
-        return $result;
+            result += "</g>"
+            horizAdvY += 35 // (ascent + descent) / unitsPerEm TODO: figure out how tall lines should be dynamically
+        })
+        return result
     }
 }

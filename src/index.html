@@ -5,25 +5,76 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Document</title>
-</head>
-<body>
   <style>
-    @font-face {
-      font-family: "QEMeganRikli";
-      src: 
-        url('./assets/QEMeganRikli.ttf') format('truetype'),
-        url("./assets/QEMeganRikliPrint.svg#QEMeganRikliPrint") format('svg'); /*can't get svg one to work...*/
-      font-weight: normal;
-      font-style: normal;
-    }
-
     body {
-      font-family: QEMeganRikli;
-      font-size: 3rem;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    svg {
+      background-color: #eee;
+    }
+    path {
+      stroke: #000;
+      stroke-width: 1.5;
+      fill: #000;
+    }
+    textarea {
+      width: 50rem;
+      height: 5rem;
+    }
+    label {
+      font-weight: bold;
     }
   </style>
-  <p>
-      The quick brown fox jumped over the lazy dog.
-  </p>
+</head>
+<body>
+  <label>Font Size</label><br>
+  <input type="number" value="35" id="fontSizeBox" />
+  <br><br>
+  <label>Your letter</label><br>
+  <textarea id="text"></textarea>
+  <br><br>
+  <label>Preview</label>
+  <br>
+  <svg id="testSVG" width="1000" height="700" xmlns="http://www.w3.org/2000/svg"></svg>
+
+  <script src="./services/SVGFont.js"></script>
+  <script>
+    const fontSizeBox = document.getElementById('fontSizeBox')
+    const textarea = document.getElementById('text')
+    const svg = document.getElementById('testSVG')
+    const initial = `
+Hi there!
+
+I made you a package! It has treats for you to put in your mouth, taste, and swallow.
+Don't eat too many treats though.
+
+Here's another paragraph. Each character is an SVG path, so the axidraw machine will 
+be able to consume it and regurgitate it onto paper.
+
+Still some work to do to make sure spacing, line height, etc look decent, but this should
+do the trick!
+
+Sincerely,
+
+- John
+    `
+    textarea.innerHTML = initial
+
+    fetch('./assets/QEMeganRikliCAP.svg')
+      .then(r => r.text())
+      .then(svgString => {
+        const svgFont = new SVGFont(svgString)
+
+        const render = e => {
+          console.log('Rendering: ', fontSizeBox.value, textarea.value)
+          const output = svgFont.textToPaths(textarea.value, fontSizeBox.value)
+          const bg = ''
+          svg.innerHTML =  `<g transform="translate(10, 40)">${output}</g>`
+        }
+        render()
+        fontSizeBox.addEventListener('change', render)
+        textarea.addEventListener('keyup', render)
+      })
+  </script>
 </body>
 </html>
