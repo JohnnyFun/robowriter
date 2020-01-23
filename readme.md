@@ -19,3 +19,11 @@
 
 - `npm run test`
   - take a look in ./tests folder
+
+
+## Adding Font
+
+- used online ttf to svg converter to generate the svg glyphs
+  - https://convertio.co/download/817b03b5afd5063d4e178b7acde94792c887cc/
+- then used `SVGFont.js` to convert the glyphs to svg `path`s
+
