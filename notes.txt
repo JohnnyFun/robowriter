@@ -1,0 +1,31 @@
+- transform font to svg paths that axidraw can follow
+  - https://stackoverflow.com/questions/7742148/how-to-convert-text-to-svg-paths
+
+
+- UI
+  - svelte!
+  - simple WYSIWYG editor with just a font-size picker
+    - tabs translate to spaces...
+  - print preview (more for debugging)
+    - show svg output, ability to view svg and svg paths code
+    - use simulator to show what will happen
+  - configure settings
+    - ability to tweak settings that make sense from UI...or at least a config json file
+
+- Architecture
+  - web app separate from the printer
+  - printer plugin polymorphism
+    - implement with simulator and real machine, be able to easily print to either
+
+- Tests
+  - cypress happy path
+    - open home page
+    - type into box
+    - set font-size bigger
+    - assert the svg that is generated is EXACTLY correct that will be sent to axidraw
+      - put svg in hidden element 
+  - cypress tests for WYSIWYG editor  
+    - assert various inputs result in correct svg path output
+      - tab translates to 2 spaces
+      - capitalized letters, lowercase
+      - line breaks work correctly with big or small font-sizes
