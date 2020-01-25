@@ -1,12 +1,13 @@
 <script>
-  let test = 'Johnny WUT'
+  import { print } from 'services/api'
+  let test = 'Johnny WUT OK'
 
   async function loadData() {
-    const res = await fetch('/api/test').then(r => r.text())
+    const res = await print()
     test += res
   }
 
   loadData()
 </script>
 
-<h1>HI {test}!</h1>  yes no
+<h1>HI {test}!</h1> 

@@ -2,10 +2,8 @@
 
 - install node/npm
 - `npm i`
-- `npm start`
-  - this starts the client-side code up with hot-module reloading
-- F5 in vscode to start the express server
-  - or run directly with node/nodemon, if you like
+- `npm run client` to start the webpack-dev-server
+- `npm run server` to run backend express server and watch for server code changes
 
 ## Using
 

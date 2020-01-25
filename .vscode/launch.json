@@ -4,42 +4,11 @@
   // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
-    // {
-    //   "name": "Debug robowriter",
-    //   "type": "node",
-    //   "request": "launch",
-    //   "program": "${workspaceFolder}/src/server/index.js"
-    // },
-
     {
-      // main configuration to setup live-reload when debugging the app locally
-      // https://code.visualstudio.com/docs/nodejs/nodejs-debugging#_restarting-debug-sessions-automatically-when-source-is-edited
-      "name": "Watch robowriter app",
+      "name": "Debug robowriter",
       "type": "node",
       "request": "launch",
-      "runtimeExecutable": "npx",
-      "args": [
-        "nodemon", // watch changes to our server code and restart it
-        "--inspect=9229", // so vscode debugger can attach to the running process
-        "--watch ./src/server", // only restart webserver if anything in the server dir changes
-        "--watch webpack.config.js", // also restart if webpack config changes
-        "${workspaceFolder}/src/server/index.js", 
-      ],
-      "restart": true,
-      "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "port": 9229
-    },
-
-    {
-      // handy when you just want to run a js file with node from vscode
-      "name": "Run current file with nodejs",
-      "type": "node",
-      "request": "launch",
-      "program": "${file}",
-      "skipFiles": [
-        "<node_internals>/**"
-      ]
+      "program": "${workspaceFolder}/src/server/index.js"
     }
   ]
 }

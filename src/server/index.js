@@ -1,14 +1,18 @@
-const prod = process.env.NODE_ENV === 'production'
-const webpack = require('webpack')
-const webpackDevMiddleware = require('webpack-dev-middleware')
-const webpackConfig = require('../../webpack.config.js')
-
-const express = require('express')
-const app = express()
+const prod = process.env.NODE_ENV === 'production';
 const port = 5000
+const express = require('express')
+var cors = require('cors')
+const app = express()
 
-if (prod) app.use(express.static('dist'))
-else app.use(webpackDevMiddleware(webpack(webpackConfig)))
+if (!prod) {
+  // during dev, fire up webpack-dev-server on port 8080
+  app.use(cors({
+    origin: 'http://localhost:8080' // TODO: DRY port
+  }))
+}
+
+// when built for production, the server and client will be served on same port
+app.use(express.static('dist'))
 
 // send the svg paths to axidraw machine
 app.post('/api/print', (req, res) => {
@@ -16,8 +20,7 @@ app.post('/api/print', (req, res) => {
 })
 
 app.get('/api/test', (req, res) => {
-  console.log('yay')
-  res.send('updated')
+  res.send('updated##')
 })
 
 app.listen(port, () => console.log(`Example app listening at http://localhost:${port}`))

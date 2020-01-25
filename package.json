@@ -4,9 +4,11 @@
   "description": "",
   "main": "webpack.config.js",
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.17.1"
   },
   "devDependencies": {
+    "clean-webpack-plugin": "^3.0.0",
     "cross-env": "^6.0.3",
     "css-loader": "^3.4.2",
     "html-webpack-plugin": "^3.2.0",
@@ -17,12 +19,13 @@
     "svelte-loader": "^2.13.6",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10",
-    "webpack-dev-middleware": "^3.7.2",
-    "webpack-livereload-plugin": "^2.2.0"
+    "webpack-dev-server": "^3.10.1"
   },
   "scripts": {
-    "start": "nodemon --inspect=9229 --watch ./src/server --watch webpack.config.js ./src/server/index.js",
-    "prod": "cross-env NODE_ENV=production && webpack && node ./src/server/index.js",
+    "client": "webpack-dev-server",
+    "client:prod": "cross-env NODE_ENV=production webpack",
+    "server": "nodemon ./src/server/index.js --watch ./src/server",
+    "server:prod": "node ./src/server/index.js",
     "test": "TODO: implement"
   },
   "repository": {
