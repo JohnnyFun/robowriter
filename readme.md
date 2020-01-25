@@ -2,8 +2,8 @@
 
 - install node/npm
 - `npm i`
-- `npm run client` to start the webpack-dev-server
-- `npm run server` to run backend express server and watch for server code changes
+- `npm start` 
+  - starts the webpack-dev-server and the express server, watching both for changes
 
 ## Using
 

@@ -8,8 +8,6 @@ const resolveClient = relativePath => path.resolve('./src/client', relativePath 
 const resolveDist = relativePath => path.resolve('./dist', relativePath || '.')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const { CleanWebpackPlugin } = require('clean-webpack-plugin')
-
 
 module.exports = {
 	mode,
@@ -31,7 +29,7 @@ module.exports = {
 					loader: 'svelte-loader',
 					options: {
 						emitCss: true,
-						hotReload: true
+						hotReload: false
 					}
 				}
 			},
@@ -46,18 +44,17 @@ module.exports = {
 		]
 	},
   plugins: [
-		new CleanWebpackPlugin(),
 		new MiniCssExtractPlugin({
-			filename: resolveDist('[name].[chunkhash].css')
+			filename: '[name].[chunkhash].css'
 		}),
 		new HtmlWebpackPlugin({
 			// https://github.com/jantimon/html-webpack-plugin#options
 			template: resolveClient('index.html')
 		})
 	],
-	devtool: prod ? false: 'source-map',
+	// devtool: prod ? false: 'source-map',
 	devServer: {
-		contentBase: './dist',
-		hot: true
+		contentBase: resolveDist(),
+		hot: false
 	}
 }

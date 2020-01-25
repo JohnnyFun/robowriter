@@ -4,16 +4,18 @@
   "description": "",
   "main": "webpack.config.js",
   "dependencies": {
+    "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.17.1"
   },
   "devDependencies": {
-    "clean-webpack-plugin": "^3.0.0",
     "cross-env": "^6.0.3",
     "css-loader": "^3.4.2",
     "html-webpack-plugin": "^3.2.0",
     "mini-css-extract-plugin": "^0.9.0",
     "nodemon": "^2.0.2",
+    "npm-run-all": "^4.1.5",
+    "serialport": "^8.0.6",
     "style-loader": "^1.1.3",
     "svelte": "^3.17.3",
     "svelte-loader": "^2.13.6",
@@ -22,10 +24,12 @@
     "webpack-dev-server": "^3.10.1"
   },
   "scripts": {
+    "start": "npm-run-all --parallel server client",
+    "start:prod": "npm-run-all --parallel server:prod client:prod",
     "client": "webpack-dev-server",
     "client:prod": "cross-env NODE_ENV=production webpack",
     "server": "nodemon ./src/server/index.js --watch ./src/server",
-    "server:prod": "node ./src/server/index.js",
+    "server:prod": "cross-env NODE_ENV=production node ./src/server/index.js",
     "test": "TODO: implement"
   },
   "repository": {

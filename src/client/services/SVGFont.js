@@ -1,12 +1,11 @@
 // inspired by: https://stackoverflow.com/questions/7742148/how-to-convert-text-to-svg-paths
-class SVGFont {
-    font = {}
-    glyphs = {}
-
+export default class SVGFont {
     constructor(svgString) {
+        this.font = {}
+        this.glyphs = {}
         this._parseSVGInfo(svgString)
     }
-    
+
     _parseSVGInfo(svgString) {
         // skip anything before the opening svg tag
         this.svgString = svgString.slice(svgString.indexOf('<svg'))
@@ -17,7 +16,7 @@ class SVGFont {
         if (font) {
             this._eachAttr(font.attributes, (n, v) => this.font[n] = v)
         }
-        
+
         const fontface = svgElement.querySelector('font-face')
         if (fontface) {
             this.font.fontFace = {}
