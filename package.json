@@ -1,0 +1,38 @@
+{
+  "name": "robowriter",
+  "version": "1.0.0",
+  "description": "",
+  "main": "webpack.config.js",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "cross-env": "^6.0.3",
+    "css-loader": "^3.4.2",
+    "html-webpack-plugin": "^3.2.0",
+    "mini-css-extract-plugin": "^0.9.0",
+    "nodemon": "^2.0.2",
+    "style-loader": "^1.1.3",
+    "svelte": "^3.17.3",
+    "svelte-loader": "^2.13.6",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-middleware": "^3.7.2",
+    "webpack-livereload-plugin": "^2.2.0"
+  },
+  "scripts": {
+    "start": "nodemon --inspect=9229 --watch ./src/server --watch webpack.config.js ./src/server/index.js",
+    "prod": "cross-env NODE_ENV=production && webpack && node ./src/server/index.js",
+    "test": "TODO: implement"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JohnnyFun/robowriter.git"
+  },
+  "author": "John Schottler",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JohnnyFun/robowriter/issues"
+  },
+  "homepage": "https://github.com/JohnnyFun/robowriter#readme"
+}

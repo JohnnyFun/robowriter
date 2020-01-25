@@ -1,4 +1,3 @@
-
 // inspired by: https://stackoverflow.com/questions/7742148/how-to-convert-text-to-svg-paths
 class SVGFont {
     font = {}
@@ -72,10 +71,6 @@ class SVGFont {
                     console.warn(`Did not find glyph for "${char}"`)
                     continue
                 }
-                // if (glyph.d == null) {
-                //     console.warn(`Did not find "d" for glyph char "${char}"`)
-                //     continue
-                // }
                 result += `<path transform=\"translate(${horizAdvX},${horizAdvY}) rotate(180) scale(-1, 1)\" d=\"${this.glyphs[char].d || ''}\" />`
                 horizAdvX += this.glyphs[char]['horiz-adv-x'] || 1000
             }

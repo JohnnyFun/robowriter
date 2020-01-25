@@ -3,7 +3,9 @@
 - install node/npm
 - `npm i`
 - `npm start`
-  - site should open locally with livereload
+  - this starts the client-side code up with hot-module reloading
+- F5 in vscode to start the express server
+  - or run directly with node/nodemon, if you like
 
 ## Using
 

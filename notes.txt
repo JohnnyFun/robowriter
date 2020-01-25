@@ -35,3 +35,10 @@
       - tab translates to 2 spaces
       - capitalized letters, lowercase
       - line breaks work correctly with big or small font-sizes
+    - assert can't go outside of bounds of machine  
+      - long line of text should be converted based on font-size, etc. to multiple lines of text
+      - long letter warns that the letter won't fit on a single paper and suggests to split it into multiple jobs
+      - assert reasonable padding too--no path should come close to outside of sheet of paper
+    - assert some variance in the chars?
+      - just slightly modify all letters so they're never _exactly_ the same
+        - be able to turn this off for tests that assert exact svg content
