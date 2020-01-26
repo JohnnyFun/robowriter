@@ -1,7 +1,6 @@
-import { ports } from '../../constants'
-const server = `http://localhost:${ports.server}/`
+import { urls } from '../../constants'
 
-const getAsset = name => fetch(server + `assets/${name}`).then(r => r.text())
+const getAsset = name => fetch(urls.server + `/assets/${name}`).then(r => r.text())
 export const getSvgFont = () => Promise.all([
   getAsset('QEMeganRikliCAP.svg'), // TODO: might make more sense to show the ttf in the browser. But we have to generate svg paths anyway, so either way is probably fine as long as scale is correct
   getAsset('QEMeganRikliPrintSL.svg') 
@@ -11,4 +10,6 @@ export const getSvgFont = () => Promise.all([
     print
   }
 })
-export const isConnected = () => fetch(server + 'api/connected').then(r => r.json())
+
+export const getPrintFont = () => getAsset('QEMeganRikliPrintSL.svg')
+export const getUsbPorts = () => fetch(urls.server + '/api/usbports').then(r => r.json())

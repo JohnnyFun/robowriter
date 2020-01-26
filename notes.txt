@@ -49,3 +49,18 @@ Scaling notes:
   - x/y to axidraw is 0-100% of the drawing area
     - so have a configuration json file where you can tell the width/height of the drawing surface in centimeters or something
       - then convert centimeters to pixels based on the computer monitor?
+
+
+
+-----------------
+axidraw cli or cncserver rest api?
+  - sounds like cli simply takes an svg
+    - but probably doesn't have a simulator? Maybe there's a different simulator?
+    - might be cool to just build the svg up client-side, then send it server side and call the axidraw CLI--if that works, we might pretty much be complete!
+  - but api is nice because you have simulator
+    - and it too was written by the official company
+    - looks like they have plans to add "svg direct load" feature...
+      - LEFT OFF: load up alien boy
+        - does it do it correctly? If so, what's different about the svg? Can you make the letters more like it?
+          - might be trickier though...if it's not drawing chars correctly, like hershey does in inkscape...
+            - if so, you'll need to probably use the CLI...unfortunately there's no simulator, but maybe you can hook in at the point it sends x/y and hit the api of simulator?

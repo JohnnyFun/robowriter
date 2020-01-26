@@ -1,53 +1,80 @@
 <script>
+	import { get,set } from 'services/local-storage'
+	import Loading from 'components/Loading'
+	import connected from 'stores/connected'
 	import Icon from 'components/Icon'
 	import Btn from 'components/Btn'
-  import { isConnected } from 'services/api'
-  import { ports } from '../../constants'
+  import { urls } from '../../constants'
   import { dpi } from 'services/screen'
+  import { startCncServer } from 'services/websockets'
+  import { getUsbPorts } from 'services/api'
+  
+  // note if you want to connect multiple machines and print to all of them, you'd just need to fire up multiple instances of cncserver and hit all their apis the same as you draw
+  // else you could set up PIs hooked to each of them, each of which could pull from a central db of jobs
+  // for now, just keep it simple though...single machine, connected to single computer
+  const key = 'connectedTo'
 
   let status = null
-  let usingSimulator = true
-  const checkConnectionStatus = async () => status = await isConnected()
-  $: if (!usingSimulator) checkConnectionStatus()
-  $: connected = usingSimulator ? true : status ? status.connected : false
+  let usbPorts = null
+  let showPorts = false
+  let connectedTo = get(key)
+  $: set(key, connectedTo)
+  
+  connectTo(connectedTo)
+  getUsbPorts().then(r => usbPorts = r)
 
-  function toggleSimulator() {
-    usingSimulator = !usingSimulator
-    if (!usingSimulator) {
-      /*  TODO
-        - get list of available ports down to UI from server
-          - each port will show
-            - name [Button: Try to connect]
-              - if no machine connected: 'Failed to connect to a machine through [port name]. [Button: Open Simulator] (when simulator ready)'
-              - else 'Successfully connected to axidraw via [port name]!' and move the head out and back to show which one
-        - Ideally, auto-select one that appears to be connected to a machine
-          - and set that one as selected initially
-      */
-    }
+  function connectTo(usbPort) {
+    startCncServer(usbPort)
+    connectedTo = usbPort
   }
 </script>
 
 <div class="menu">
   <div class="dpi">DPI: {dpi}</div>
   <div class="actions">
-    {#if !usingSimulator}
-      <span class="text-{connected ? 'success' : 'danger'}">
-        {#if !connected}Not{/if} Connected to axidraw machine via usb
-      </span>
-    {:else}
-      <a class="btn btn-secondary" href="http://localhost:{ports.simulator}" target="_blank">
-        <Icon type="external-link" />
-        Open simulator
-      </a>
+    Connected to {#if $connected}axidraw machine{:else}simulator{/if}
+    {#if !$connected}
+    <a class="btn btn-secondary" href={urls.simulator} target="_blank">
+      <Icon type="external-link" />
+      Open simulator
+    </a>
     {/if}
-    <Btn class="secondary" on:click={toggleSimulator} icon="usb">
-      Connect to {#if usingSimulator}axidraw machine{:else}simulator{/if}
-    </Btn>
-    {#if connected}
-      <slot />  
-    {/if}
+    <div class="btn-group dropup">
+      <Btn class="secondary dropdown-toggle" on:click={e => showPorts = !showPorts} icon="usb">
+        Change connection
+      </Btn>
+      {#if !showPorts}
+        <div class="dropdown-menu show px-4">
+          {#if usbPorts == null}
+            <Loading />
+          {:else}
+            {#each usbPorts as p,i}
+              <div class="item">
+                <p>
+                  {#if p.manufacturer}{p.manufacturer} - {/if}
+                  {p.name} 
+                </p>
+                <div>
+                  <Btn class="sm {connectedTo === p.value ? 'btn-primary' : 'btn-secondary'}" on:click={e => connectTo(p.value)}>
+                    {#if connectedTo === p.value}
+                      Re-Connect
+                    {:else}
+                      Connect
+                    {/if}
+                  </Btn>
+                </div>
+              </div>
+              {#if i < usbPorts.length-1}<div class="dropdown-divider"></div>{/if}
+            {/each}
+          {/if}
+        </div>
+      {/if}
+    </div>
+    <slot />  
   </div>
 </div>
+
+
 
 <style>
   .menu {
@@ -72,5 +99,10 @@
     font-size: 1.2rem;
     position: relative;
     top: 1rem;
+  }
+
+  .item {
+    font-size: 1.3rem;
+    padding: 1rem;
   }
 </style>

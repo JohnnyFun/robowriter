@@ -4,8 +4,8 @@
 // they say it works well on limited hardware ("Raspberry PI verified")
 // their code looks reasonable too and it seems to work great with the real axidraw machine
 // and their simulator is helpful and seems accurate, though it'd be nice if it drew an svg on its end to assert it's doing what you want
-import { ports } from '../../constants'
-const API_URL = `http://localhost:${ports.simulator}/v1`;
+import { urls } from '../../constants'
+const API_URL = `${urls.simulator}/v1`;
 
 export default class Axidraw {
   /**

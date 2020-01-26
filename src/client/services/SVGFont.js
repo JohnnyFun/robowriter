@@ -7,7 +7,7 @@ export default class SVGFont {
         this.font = {}
         this.glyphs = {}
         this._parseSVGInfo(svgString)
-        // this.linearize(3, 100) // TODO: according to hershey, this should NOT be necessary: https://gitlab.com/oskay/hershey-text/blob/master/hershey-text/hershey.py "- Arbitrary curves are supported within glyphs; we are no longer limited tothe straight line segments used in the historical Hershey format."
+        this.linearize(3, 100) // TODO: according to hershey, this should NOT be necessary: https://gitlab.com/oskay/hershey-text/blob/master/hershey-text/hershey.py "- Arbitrary curves are supported within glyphs; we are no longer limited tothe straight line segments used in the historical Hershey format."
     }
 
     _parseSVGInfo(svgString) {
@@ -48,7 +48,11 @@ export default class SVGFont {
                 'horiz-adv-x',
                 'units-per-em',
                 'ascent',
-                'descent'
+                'descent',
+                'x-height',
+                'cap-height',
+                'underline-thickness',
+                'underline-position'
             ]
             const val = numericAttributeNames.some(a => a === attr.name) ? parseFloat(attr.value) : attr.value
             callback(attr.name, val)
@@ -56,44 +60,43 @@ export default class SVGFont {
     }
 
     // it appears the "PRINT.svg"
-    // linearize(tolerance, segments) {
-    //     // TODO: save by tolerance/segments values into localstorage or cache (only retain last 5 values)
-    //     // TODO: show loading when dynamically linearizing
-    //     // TODO: put work onto webworker(s) to parallelize the work (low priority since it gets cached)
-    //     const key = `linearized_${tolerance}_${segments}`
-    //     let linearized = get(key)
-    //     if (linearized == null) {
-    //         console.log('linearizing ', key)
-    //         console.time('linearizing')
-    //         linearized = {}
-    //         Object.keys(this.glyphs).forEach(char => {
-    //             if (this.glyphs[char].d != null) {
-    //                 const curvedPathSvg = document.createElement('svg')
-    //                 const path = document.createElement('path')
-    //                 path.setAttribute('d', this.glyphs[char].d)
-    //                 curvedPathSvg.appendChild(path)
-    //                 const linearizedCurves = linearize(curvedPathSvg, {
-    //                     tolerance, // higher value means fewer points, so less smooth,
-    //                     segments // number of points to sample for the curve
-    //                 })
-    //                 const linearPath = linearizedCurves.querySelector('path')
-    //                 linearized[char] = linearPath.getAttribute('d')
-    //             }
-    //         })
-    //         set(key, linearized)
-    //         this.glyphsLinearized = linearized
-    //         console.timeEnd('linearizing')
-    //     } else {
-    //         this.glyphsLinearized = linearized[key]
-    //     }
-
-
-    //     // TEMP
-    //     this.glyphsLinearized = this.glyphs
-    // }
+    linearize(tolerance, segments) {
+        // TODO: save by tolerance/segments values into localstorage or cache (only retain last 5 values)
+        // TODO: show loading when dynamically linearizing
+        // TODO: put work onto webworker(s) to parallelize the work (low priority since it gets cached)
+        const key = `linearized_${tolerance}_${segments}`
+        let linearized = get(key)
+        if (linearized == null) {
+            console.log('linearizing ', key)
+            console.time('linearizing')
+            linearized = {}
+            Object.keys(this.glyphs).forEach(char => {
+                if (this.glyphs[char].d != null) {
+                    const curvedPathSvg = document.createElement('svg')
+                    const path = document.createElement('path')
+                    path.setAttribute('d', this.glyphs[char].d)
+                    curvedPathSvg.appendChild(path)
+                    const linearizedCurves = linearize(curvedPathSvg, {
+                        tolerance, // higher value means fewer points, so less smooth,
+                        segments // number of points to sample for the curve
+                    })
+                    const linearPath = linearizedCurves.querySelector('path')
+                    linearized[char] = linearPath.getAttribute('d')
+                }
+            })
+            set(key, linearized)
+            this.glyphsLinearized = linearized
+            console.timeEnd('linearizing')
+        } else {
+            this.glyphsLinearized = linearized
+        }
+        
+        // // TEMP
+        // this.glyphsLinearized = this.glyphs
+    }
 
     // returns xml for SVG paths representing this the given string and size
-    textToPaths(text, fontSize, useLinearized = false) {
+    textToPaths(text, fontSize, useLinearized = true) {
         const unitsPerEm = this.font.fontFace['units-per-em']
         const ascent = this.font.fontFace.ascent
         const descent = this.font.fontFace.descent

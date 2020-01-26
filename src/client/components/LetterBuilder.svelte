@@ -4,7 +4,7 @@
 	import Alert from 'components/Alert'
 	import Btn from 'components/Btn'
 	import api from 'services/api'
-  import { getSvgFont, print } from 'services/api'
+  import { getPrintFont } from 'services/api'
   import SVGFont from 'services/svgFont'
   import { placeholderLetter, BOT_SCALE } from '../../constants'
   import AxiDraw from 'services/axidraw'
@@ -22,10 +22,9 @@
   import { toPixels, toInches } from 'services/screen'
   
   let svgEl
-  let letter = placeholderLetter
+  let letter = 'H' //placeholderLetter
   let svgPaths = []
   let svgFont = null
-  let svgFontPrint = null
   let loading = false
   let error = null
   let currentPrintPathIndex = -1
@@ -43,7 +42,6 @@
   $: paddingYInches = settings.paddingYInches
 
   $: svgPaths = svgFont ? svgFont.textToPaths(letter, fontSize) : []
-  $: svgPathsPrint = svgFontPrint ? svgFontPrint.textToPaths(letter, fontSize) : []
 
   $: height = toPixels(heightInches)
   $: width = toPixels(widthInches)
@@ -51,9 +49,11 @@
   $: paddingY = toPixels(paddingYInches)
 
   async function init() {
-    const { view, print } = await getSvgFont()
-    svgFont = new SVGFont(view)
-    svgFontPrint = new SVGFont(print)
+    // const { view, print } = await getSvgFont()
+    // svgFont = new SVGFont(view)
+    // svgFontPrint = new SVGFont(print)
+    const svg = await getPrintFont()
+    svgFont = new SVGFont(svg)
   }
 
   async function printLetter(startIndex) {
@@ -69,7 +69,7 @@
     await axiDraw.parkPen()
     for (let i = startIndex; i < lines.length; i++) {
        // if want to pause, break out--perhaps the pen ink stopped flowing, or they want to change the text at a later part that hasn't been printed yet
-      if (pauseJobAt != null) return
+      if (pauseJobAt != null) return // TODO: pass a cancellationToken into axidraw class...so it stops immediately?
       currentPrintPathIndex = i
       const line = lines[i]
       const relativeLine = line.map(p => [
@@ -79,16 +79,18 @@
       await axiDraw.drawPath(relativeLine)
     }
     await axiDraw.parkPen()
+    currentPrintPathIndex = -1
+    pauseJobAt = null
   }
 </script>
 
 <MenuBottom>
-  {#if currentPrintPathIndex > -1}
-    <Btn icon="pause-circle" class="warning" on:click={e => pauseJobAt = currentPrintPathIndex} disabled={loading}>Pause</Btn>
-  {:else if pauseJobAt != null}
-    <input type="number" bind:value={currentPrintPathIndex} max={lines.length} min={0} />
+  {#if pauseJobAt != null}
+    <input type="number" bind:value={currentPrintPathIndex} max={lines.length-1} min={0} />
     <Btn icon="play" on:click={e => printLetter(currentPrintPathIndex)} disabled={loading}>Continue</Btn>
     <Btn icon="redo" on:click={e => printLetter(0)} disabled={loading}>Restart</Btn>
+  {:else if currentPrintPathIndex > -1}
+    <Btn icon="pause-circle" class="warning" on:click={e => pauseJobAt = currentPrintPathIndex} disabled={loading}>Pause</Btn>
   {:else}
     <Btn icon="print" on:click={e => printLetter(0)} disabled={loading}>Print</Btn>
   {/if}
