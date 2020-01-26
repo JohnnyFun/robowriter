@@ -1,0 +1,7 @@
+The "QEMeganRikliPrintSL.svg" one seems auto close paths which makes characters like lower-case "h" look weird because they connect the beginning and end of the path
+
+Whereas the "QEMeganRikliPrint.svg" one does not. So use that instead for printing
+
+Both are "single-stroke" aka "engraving" fonts. So they do a single stroke rather than an outline of each character, more like how a person writes.
+
+More info here: https://cdn.evilmadscientist.com/dl/ad/public/HersheyText_v30r5.pdf

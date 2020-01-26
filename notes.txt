@@ -42,3 +42,10 @@
     - assert some variance in the chars?
       - just slightly modify all letters so they're never _exactly_ the same
         - be able to turn this off for tests that assert exact svg content
+
+
+---------------------------
+Scaling notes:
+  - x/y to axidraw is 0-100% of the drawing area
+    - so have a configuration json file where you can tell the width/height of the drawing surface in centimeters or something
+      - then convert centimeters to pixels based on the computer monitor?

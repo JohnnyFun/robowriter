@@ -5,6 +5,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>Robo Writer</title>
+  <!--
+    just use good ol bootstrap for now, but later on 
+    style the bootstrap classes maybe. but no biggy to just keep using bootstrap too
+    could also just import the sass that you're using instead of the entire thing, but not a big deal even on a raspberry pi probably
+  -->
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <!--
+    using font awesome for icons for now--again, consider pulling only what's needed from somewhere if it's slow on light hardware--but
+    if we connect multiple drawing machines to a single machine, that won't be an issue
+    https://fontawesome.com/icons?d=gallery&m=free
+  -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
 </head>
 <body>
   <div id="app"></div>

@@ -19,8 +19,5 @@ https://code.visualstudio.com/docs/languages/jsconfig
 	},
 	"include": [
 		"./src"
-	],
-	"exclude": [
-		"./node_modules"
 	]
 }

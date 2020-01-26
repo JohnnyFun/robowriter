@@ -8,6 +8,7 @@ const resolveClient = relativePath => path.resolve('./src/client', relativePath 
 const resolveDist = relativePath => path.resolve('./dist', relativePath || '.')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const { ports } = require('./src/constants')
 
 module.exports = {
 	mode,
@@ -52,9 +53,10 @@ module.exports = {
 			template: resolveClient('index.html')
 		})
 	],
-	// devtool: prod ? false: 'source-map',
+	devtool: prod ? false: 'source-map',
 	devServer: {
 		contentBase: resolveDist(),
-		hot: false
+		hot: false,
+		port: ports.client
 	}
 }
