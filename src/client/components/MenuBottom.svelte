@@ -28,10 +28,10 @@
 </script>
 
 <div class="menu">
-  <div class="dpi">DPI {dpi}</div>
+  <div class="dpi">DPI: {dpi}</div>
   <div class="actions">
     {#if !usingSimulator}
-      <span class="text-danger">
+      <span class="text-{connected ? 'success' : 'danger'}">
         {#if !connected}Not{/if} Connected to axidraw machine via usb
       </span>
     {:else}
@@ -71,6 +71,6 @@
   .dpi {
     font-size: 1.2rem;
     position: relative;
-    top: 1.5rem;
+    top: 1rem;
   }
 </style>

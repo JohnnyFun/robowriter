@@ -7,5 +7,5 @@ document.body.appendChild(dpiEl)
 export const dpi = dpiEl.offsetHeight
 document.body.removeChild(dpiEl)
 
-export const toPixels = (val, unit = 'in') => val * dpi
-export const toInches = (val, unit = 'px') => val / dpi
+export const toPixels = val => val ? val * dpi : 0
+export const toInches = val => val ? val / dpi : 0

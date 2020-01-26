@@ -1,4 +1,5 @@
 <script>
+	import Settings from 'components/Settings'
 	import MenuBottom from 'components/MenuBottom'
 	import Alert from 'components/Alert'
 	import Btn from 'components/Btn'
@@ -20,13 +21,6 @@
   import linearize from 'svg-linearize'
   import { toPixels, toInches } from 'services/screen'
   
-  // TODO: store width/height/etc in localstorage
-  let fontSize = 35
-  let heightInches = 11
-  let widthInches = 8.5
-  let paddingYInches = 1
-  let paddingXInches = .8
-
   let svgEl
   let letter = placeholderLetter
   let svgPaths = []
@@ -38,8 +32,15 @@
   let abortJob = false
   let pauseJobAt = null
   let lines = []
+  let settings = {}
 
   init()
+
+  $: fontSize = settings.fontSize
+  $: heightInches = settings.heightInches
+  $: widthInches = settings.widthInches
+  $: paddingXInches = settings.paddingXInches
+  $: paddingYInches = settings.paddingYInches
 
   $: svgPaths = svgFont ? svgFont.textToPaths(letter, fontSize) : []
   $: svgPathsPrint = svgFontPrint ? svgFontPrint.textToPaths(letter, fontSize) : []
@@ -92,46 +93,10 @@
     <Btn icon="print" on:click={e => printLetter(0)} disabled={loading}>Print</Btn>
   {/if}
 </MenuBottom>
-
-
-<Alert type="danger" msg={error} />
-
-<div class="settings form-inline">
-  <label>
-    <div class="input-group mb-3 mr-4">
-      <div class="input-group-append">
-        <span class="input-group-text">Paper dimensions</span>
-      </div>
-      <input class="form-control" type="number" bind:value={widthInches} /> 
-      <div class="input-group-append">
-        <span class="input-group-text">Inches</span>
-      </div>
-      <div class="input-group-append">
-        <span class="input-group-text">X</span>
-      </div>
-      <input class="form-control" type="number" bind:value={heightInches} /> 
-      <div class="input-group-append">
-        <span class="input-group-text">Inches</span>
-      </div>
-    </div>
-  </label>
-
-  <label>
-    <div class="input-group mb-3">
-      <div class="input-group-append">
-        <span class="input-group-text">Font size</span>
-      </div>
-      <input class="form-control" type="number" bind:value={fontSize} />
-      <div class="input-group-append">
-        <span class="input-group-text">Pixels</span>
-      </div>
-    </div>
-  </label>
-</div>
-
+<Settings onChange={s => settings = s} />
 <textarea class="form-control" bind:value={letter}></textarea>
-
 <div class="preview">
+  <Alert type="danger" msg={error} />
   <svg bind:this={svgEl} {width} {height} xmlns="http://www.w3.org/2000/svg">
     <g transform="translate({paddingX}, {paddingY})">
       {#each svgPaths as p,i}
@@ -165,8 +130,5 @@
   }
   input[type="number"] {
     width: 8rem;
-  }
-  .settings {
-    min-width: 43rem;
   }
 </style>
