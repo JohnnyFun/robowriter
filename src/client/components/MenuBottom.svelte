@@ -1,4 +1,5 @@
 <script>
+	import DropMenu from 'components/DropMenu'
 	import { get,set } from 'services/local-storage'
 	import Loading from 'components/Loading'
 	import connected from 'stores/connected'
@@ -17,11 +18,12 @@
   let status = null
   let usbPorts = null
   let showPorts = false
+  let dropDownEl
   let connectedTo = get(key)
   $: set(key, connectedTo)
   
   connectTo(connectedTo)
-  getUsbPorts().then(r => usbPorts = r)
+  getUsbPorts().then(r => usbPorts = r) 
 
   function connectTo(usbPort) {
     startCncServer(usbPort)
@@ -34,47 +36,39 @@
   <div class="actions">
     Connected to {#if $connected}axidraw machine{:else}simulator{/if}
     {#if !$connected}
-    <a class="btn btn-secondary" href={urls.simulator} target="_blank">
-      <Icon type="external-link" />
-      Open simulator
-    </a>
+      <a class="btn btn-secondary" href={urls.simulator} target="_blank">
+        <Icon type="external-link" />
+        Open simulator
+      </a>
     {/if}
-    <div class="btn-group dropup">
-      <Btn class="secondary dropdown-toggle" on:click={e => showPorts = !showPorts} icon="usb">
-        Change connection
-      </Btn>
-      {#if !showPorts}
-        <div class="dropdown-menu show px-4">
-          {#if usbPorts == null}
-            <Loading />
-          {:else}
-            {#each usbPorts as p,i}
-              <div class="item">
-                <p>
-                  {#if p.manufacturer}{p.manufacturer} - {/if}
-                  {p.name} 
-                </p>
-                <div>
-                  <Btn class="sm {connectedTo === p.value ? 'btn-primary' : 'btn-secondary'}" on:click={e => connectTo(p.value)}>
-                    {#if connectedTo === p.value}
-                      Re-Connect
-                    {:else}
-                      Connect
-                    {/if}
-                  </Btn>
-                </div>
-              </div>
-              {#if i < usbPorts.length-1}<div class="dropdown-divider"></div>{/if}
-            {/each}
-          {/if}
-        </div>
+
+    <DropMenu btnIcon="usb" label="Change connection" bind:open={showPorts}>
+      {#if usbPorts == null}
+        <Loading />
+      {:else}
+        {#each usbPorts as p,i}
+          <div class="item">
+            <p>
+              {#if p.manufacturer}{p.manufacturer} - {/if}
+              {p.name} 
+            </p>
+            <div>
+              <Btn class="sm {connectedTo === p.value ? 'btn-primary' : 'btn-secondary'}" on:click={e => connectTo(p.value)}>
+                {#if connectedTo === p.value}
+                  Re-Connect
+                {:else}
+                  Connect
+                {/if}
+              </Btn>
+            </div>
+          </div>
+          {#if i < usbPorts.length-1}<div class="dropdown-divider"></div>{/if}
+        {/each}
       {/if}
-    </div>
+    </DropMenu>
     <slot />  
   </div>
 </div>
-
-
 
 <style>
   .menu {

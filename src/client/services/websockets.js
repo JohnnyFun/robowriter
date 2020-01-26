@@ -9,7 +9,7 @@ socket.on('cncserver', msg => {
     console.error(msg.error)
     connected.set(false)
   }
-  if (msg.info) console.log(msg.info)
+  // if (msg.info) console.log(msg.info)
   if (msg.connected) connected.set(true)
 })
 
