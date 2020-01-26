@@ -17,8 +17,6 @@
 
   let status = null
   let usbPorts = null
-  let showPorts = false
-  let dropDownEl
   let connectedTo = get(key)
   $: set(key, connectedTo)
   
@@ -42,7 +40,7 @@
       </a>
     {/if}
 
-    <DropMenu btnIcon="usb" label="Change connection" bind:open={showPorts}>
+    <DropMenu btnIcon="usb" label="Change connection">
       {#if usbPorts == null}
         <Loading />
       {:else}
