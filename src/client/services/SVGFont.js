@@ -97,7 +97,7 @@ export default class SVGFont {
         const unitsPerEm = this.font.fontFace['units-per-em']
         const ascent = this.font.fontFace.ascent
         const descent = this.font.fontFace.descent
-        const size = fontSize / unitsPerEm
+        this.size = fontSize / unitsPerEm
         const lines = text.split('\n')
         let paths = []
         let horizAdvY = 0
@@ -116,13 +116,12 @@ export default class SVGFont {
                     paths.push({
                         horizAdvX,
                         horizAdvY,
-                        size,
                         d
                     })
                 }
                 horizAdvX += this.glyphs[char]['horiz-adv-x'] || 1000
             }
-            horizAdvY += 35 // (ascent + descent) / unitsPerEm TODO: figure out how tall lines should be dynamically
+            horizAdvY += fontSize // (ascent + descent) / unitsPerEm TODO: figure out how tall lines should be dynamically
         })
         return paths
     }

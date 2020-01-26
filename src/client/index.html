@@ -17,6 +17,51 @@
     https://fontawesome.com/icons?d=gallery&m=free
   -->
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    
+  <style>
+    /* a few global styles...TODO: extract to separate file and later include in a sass build, but not a big deal */
+    html {
+      font-size: 10px; /*so that 1rem === 10px*/
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      padding: 2rem;
+      font-size: 1.5rem;
+      background-color: #eee;
+      color: #666;
+    }
+
+    /*TODO: use their sass files instead--import only what you use, set their font-size sass var...*/
+    .btn, .form-control, .input-group-text {
+      font-size: 1.5rem;
+    }
+
+    /*scrollbar styling*/
+    /* width */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+      border-radius: 5px;
+    }
+
+    /* Track */
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 5px;
+    }
+
+    /* Handle */
+    ::-webkit-scrollbar-thumb {
+      background: #c9c9c9;
+      border-radius: 5px;
+    }
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+      background: darken(#c9c9c9, 10%);
+    }
+  </style>
 </head>
 <body>
   <div id="app"></div>

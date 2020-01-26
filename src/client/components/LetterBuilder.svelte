@@ -1,5 +1,5 @@
 <script>
-	import Connection from 'components/Connection'
+	import MenuBottom from 'components/MenuBottom'
 	import Alert from 'components/Alert'
 	import Btn from 'components/Btn'
 	import api from 'services/api'
@@ -18,10 +18,17 @@
   // UPDATE: looks like this https://axidraw.com/doc/cli_api/#introduction allows giving an svg to a cli command...hmmm, look at how they handle curve commands in svg paths
   import segments from 'svg-line-segments'
   import linearize from 'svg-linearize'
+  import { toPixels, toInches } from 'services/screen'
+  
+  // TODO: store width/height/etc in localstorage
+  let fontSize = 35
+  let heightInches = 11
+  let widthInches = 8.5
+  let paddingYInches = 1
+  let paddingXInches = .8
 
   let svgEl
   let letter = placeholderLetter
-  let fontSize = 35
   let svgPaths = []
   let svgFont = null
   let svgFontPrint = null
@@ -36,6 +43,11 @@
 
   $: svgPaths = svgFont ? svgFont.textToPaths(letter, fontSize) : []
   $: svgPathsPrint = svgFontPrint ? svgFontPrint.textToPaths(letter, fontSize) : []
+
+  $: height = toPixels(heightInches)
+  $: width = toPixels(widthInches)
+  $: paddingX = toPixels(paddingXInches)
+  $: paddingY = toPixels(paddingYInches)
 
   async function init() {
     const { view, print } = await getSvgFont()
@@ -69,7 +81,7 @@
   }
 </script>
 
-<Connection>
+<MenuBottom>
   {#if currentPrintPathIndex > -1}
     <Btn icon="pause-circle" class="warning" on:click={e => pauseJobAt = currentPrintPathIndex} disabled={loading}>Pause</Btn>
   {:else if pauseJobAt != null}
@@ -79,60 +91,82 @@
   {:else}
     <Btn icon="print" on:click={e => printLetter(0)} disabled={loading}>Print</Btn>
   {/if}
-</Connection>
+</MenuBottom>
 
-<form>
-  <Alert type="danger" msg={error} />
-  
-  <div class="form-group">
-    <label>
-      Font Size
+
+<Alert type="danger" msg={error} />
+
+<div class="settings form-inline">
+  <label>
+    <div class="input-group mb-3 mr-4">
+      <div class="input-group-append">
+        <span class="input-group-text">Paper dimensions</span>
+      </div>
+      <input class="form-control" type="number" bind:value={widthInches} /> 
+      <div class="input-group-append">
+        <span class="input-group-text">Inches</span>
+      </div>
+      <div class="input-group-append">
+        <span class="input-group-text">X</span>
+      </div>
+      <input class="form-control" type="number" bind:value={heightInches} /> 
+      <div class="input-group-append">
+        <span class="input-group-text">Inches</span>
+      </div>
+    </div>
+  </label>
+
+  <label>
+    <div class="input-group mb-3">
+      <div class="input-group-append">
+        <span class="input-group-text">Font size</span>
+      </div>
       <input class="form-control" type="number" bind:value={fontSize} />
-    </label>
-  </div>
+      <div class="input-group-append">
+        <span class="input-group-text">Pixels</span>
+      </div>
+    </div>
+  </label>
+</div>
 
-  <div class="form-group">
-    <label>
-      Your letter
-      <textarea class="form-control" bind:value={letter}></textarea>
-    </label>
-  </div>
+<textarea class="form-control" bind:value={letter}></textarea>
 
-  <div class="form-group">
-    <label>
-      Preview
-      <svg bind:this={svgEl} width="1000" height="700" xmlns="http://www.w3.org/2000/svg">
-        <g transform="translate(10, 40)">
-          {#each svgPaths as p,i}
-            <g transform="translate(0, {p.horizAdvY}) scale({p.size})">
-              <path 
-                class:printing={currentPrintPathIndex === i} 
-                transform="translate({p.horizAdvX},{p.horizAdvY}) rotate(180) scale(-1, 1)" d="{p.d || ''}" />
-            </g>
-          {/each}
+<div class="preview">
+  <svg bind:this={svgEl} {width} {height} xmlns="http://www.w3.org/2000/svg">
+    <g transform="translate({paddingX}, {paddingY})">
+      {#each svgPaths as p,i}
+        <g transform="translate(0, {p.horizAdvY}) scale({svgFont.size})">
+          <path 
+            class:printing={currentPrintPathIndex === i} 
+            transform="translate({p.horizAdvX},{p.horizAdvY}) rotate(180) scale(-1, 1)" d={p.d} />
         </g>
-      </svg>
-    </label>
-  </div>
-</form>
+      {/each}
+    </g>
+  </svg>
+</div>
 
 <style>
+  .preview {
+    text-align: center;
+  }
   svg {
     background-color: #fff;
-    box-shadow: 4px 4px 11px #888888;
+    box-shadow: .4rem .4rem 1.1rem #888888;
+    margin: 30px;
   }
   path {
-    stroke-width: 1.5;
     fill: #000;
   }
   .printing {
     fill: red;
   }
   textarea {
-    min-width: 100rem;
-    min-height: 5rem;
+    min-height: 10rem;
   }
-  label > input, label > textarea, label > svg {
-    display: block;
+  input[type="number"] {
+    width: 8rem;
+  }
+  .settings {
+    min-width: 43rem;
   }
 </style>
