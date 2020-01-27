@@ -127,7 +127,7 @@ export default class SVGFont {
                 horizAdvX += this.glyphs[char]['horiz-adv-x'] || 1000
             }
             const isEmptyLine = line.length === 0
-            const offSetY = isEmptyLine ? -20 : 0
+            const offSetY = isEmptyLine ? -25 : 0
             horizAdvY += this.lineHeight + offSetY // (ascent + descent) / unitsPerEm TODO: figure out how tall lines should be dynamically
         })
         return paths

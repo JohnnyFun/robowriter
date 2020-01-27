@@ -91,23 +91,24 @@
   }
 </script>
 
-<div class="letter-builder">
-  <MenuBottom>
-    {#if pauseJobAt != null}
-      <input type="number" bind:value={currentPrintPathIndex} max={lines.length-1} min={0} />
-      <Btn icon="play" on:click={e => printLetter(currentPrintPathIndex)} disabled={loading}>Continue</Btn>
-      <Btn icon="redo" on:click={e => printLetter(0)} disabled={loading}>Restart</Btn>
-    {:else if currentPrintPathIndex > -1}
-      <Btn icon="pause-circle" class="warning" on:click={e => pauseJobAt = currentPrintPathIndex} disabled={loading}>Pause</Btn>
-    {:else}
-      <Btn icon="print" on:click={e => printLetter(0)} disabled={loading}>Print</Btn>
-    {/if}
-  </MenuBottom>
-  <Settings onChange={s => settings = s} />
-  <Alert type="danger" msg={error} />
+<MenuBottom>
+  {#if pauseJobAt != null}
+    <input type="number" bind:value={currentPrintPathIndex} max={lines.length-1} min={0} />
+    <Btn icon="play" on:click={e => printLetter(currentPrintPathIndex)} disabled={loading}>Continue</Btn>
+    <Btn icon="redo" on:click={e => printLetter(0)} disabled={loading}>Restart</Btn>
+  {:else if currentPrintPathIndex > -1}
+    <Btn icon="pause-circle" class="warning" on:click={e => pauseJobAt = currentPrintPathIndex} disabled={loading}>Pause</Btn>
+  {:else}
+    <Btn icon="print" on:click={e => printLetter(0)} disabled={loading}>Print</Btn>
+  {/if}
+</MenuBottom>
+<Settings onChange={s => settings = s} />
+<Alert type="danger" msg={error} />
 
-  {#if svgFont}
-    <div class="paper-container">
+{#if svgFont}
+  <div class="paper-container">
+    <div class="paper-contents" style="width: {width}px;">
+      <h3>Editor</h3>
       <div 
         class="editor" 
         contenteditable="true" 
@@ -119,8 +120,9 @@
           font-size: {fontSize}px; 
           font-family: {svgFont.font.id};
           line-height: {svgFont.lineHeight}px;"></div>
-        
-      <div class="preview" style="width: {width}px; height: {height}px;">
+    
+      <h3 class="preview-heading">Preview</h3>
+      <div class="preview">
         <svg bind:this={svgEl} {width} {height} xmlns="http://www.w3.org/2000/svg">
           <g transform="translate({paddingX}, {paddingY})">
             {#each svgPaths as p,i}
@@ -134,17 +136,22 @@
         </svg>
       </div>
     </div>
-  {/if}
-</div>
+  </div>
+{/if}
 
 <style>
+  .paper-contents {
+    margin: 10px auto;
+  }
   .editor, .preview {
-    margin: 30px auto;
     color: #222;
     background-color: #fff;
     box-shadow: .4rem .4rem 1.1rem #888888;
     overflow: hidden;
     padding: 0;
+  }
+  .preview-heading {
+    margin-top: 6rem;
   }
   path {
     fill: #000;
@@ -153,9 +160,7 @@
     fill: red;
   }
   .paper-container {
-    width: 100%;
-  }
-  .letter-builder {
+    margin-top: 2rem;
     margin-bottom: 10rem;
   }
 </style>
