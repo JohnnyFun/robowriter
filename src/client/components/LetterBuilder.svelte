@@ -91,49 +91,51 @@
   }
 </script>
 
-<MenuBottom>
-  {#if pauseJobAt != null}
-    <input type="number" bind:value={currentPrintPathIndex} max={lines.length-1} min={0} />
-    <Btn icon="play" on:click={e => printLetter(currentPrintPathIndex)} disabled={loading}>Continue</Btn>
-    <Btn icon="redo" on:click={e => printLetter(0)} disabled={loading}>Restart</Btn>
-  {:else if currentPrintPathIndex > -1}
-    <Btn icon="pause-circle" class="warning" on:click={e => pauseJobAt = currentPrintPathIndex} disabled={loading}>Pause</Btn>
-  {:else}
-    <Btn icon="print" on:click={e => printLetter(0)} disabled={loading}>Print</Btn>
-  {/if}
-</MenuBottom>
-<Settings onChange={s => settings = s} />
-<Alert type="danger" msg={error} />
+<div class="letter-builder">
+  <MenuBottom>
+    {#if pauseJobAt != null}
+      <input type="number" bind:value={currentPrintPathIndex} max={lines.length-1} min={0} />
+      <Btn icon="play" on:click={e => printLetter(currentPrintPathIndex)} disabled={loading}>Continue</Btn>
+      <Btn icon="redo" on:click={e => printLetter(0)} disabled={loading}>Restart</Btn>
+    {:else if currentPrintPathIndex > -1}
+      <Btn icon="pause-circle" class="warning" on:click={e => pauseJobAt = currentPrintPathIndex} disabled={loading}>Pause</Btn>
+    {:else}
+      <Btn icon="print" on:click={e => printLetter(0)} disabled={loading}>Print</Btn>
+    {/if}
+  </MenuBottom>
+  <Settings onChange={s => settings = s} />
+  <Alert type="danger" msg={error} />
 
-{#if svgFont}
-  <div class="paper-container">
-    <div 
-      class="editor" 
-      contenteditable="true" 
-      bind:innerHTML={letter}
-      style="width: {width}px; 
-        height: {height}px; 
-        max-height: {height}px; 
-        padding: {paddingY-26}px {paddingX}px; 
-        font-size: {fontSize}px; 
-        font-family: {svgFont.font.id};
-        line-height: {svgFont.lineHeight}px;"></div>
-      
-    <div class="preview" style="width: {width}px; height: {height}px;">
-      <svg bind:this={svgEl} {width} {height} xmlns="http://www.w3.org/2000/svg">
-        <g transform="translate({paddingX}, {paddingY})">
-          {#each svgPaths as p,i}
-            <g transform="translate(0, {p.horizAdvY}) scale({svgFont.size})">
-              <path 
-                class:printing={currentPrintPathIndex === i} 
-                transform="translate({p.horizAdvX},{p.horizAdvY}) rotate(180) scale(-1, 1)" d={p.d} />
-            </g>
-          {/each}
-        </g>
-      </svg>
+  {#if svgFont}
+    <div class="paper-container">
+      <div 
+        class="editor" 
+        contenteditable="true" 
+        bind:innerHTML={letter}
+        style="width: {width}px; 
+          height: {height}px; 
+          max-height: {height}px; 
+          padding: {paddingY-26}px {paddingX}px; 
+          font-size: {fontSize}px; 
+          font-family: {svgFont.font.id};
+          line-height: {svgFont.lineHeight}px;"></div>
+        
+      <div class="preview" style="width: {width}px; height: {height}px;">
+        <svg bind:this={svgEl} {width} {height} xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate({paddingX}, {paddingY})">
+            {#each svgPaths as p,i}
+              <g transform="translate(0, {p.horizAdvY}) scale({svgFont.size})">
+                <path 
+                  class:printing={currentPrintPathIndex === i} 
+                  transform="translate({p.horizAdvX},{p.horizAdvY}) rotate(180) scale(-1, 1)" d={p.d} />
+              </g>
+            {/each}
+          </g>
+        </svg>
+      </div>
     </div>
-  </div>
-{/if}
+  {/if}
+</div>
 
 <style>
   .editor, .preview {
@@ -152,5 +154,8 @@
   }
   .paper-container {
     width: 100%;
+  }
+  .letter-builder {
+    margin-bottom: 10rem;
   }
 </style>
