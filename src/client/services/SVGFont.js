@@ -1,13 +1,17 @@
 import linearize from 'svg-linearize'
 import {get,set} from 'services/local-storage'
+import { hash } from 'services/utils'
 
 // inspired by: https://stackoverflow.com/questions/7742148/how-to-convert-text-to-svg-paths
 export default class SVGFont {
     constructor(svgString) {
         this.font = {}
         this.glyphs = {}
+        this.svgString = svgString
         this._parseSVGInfo(svgString)
-        this.linearize(3, 100) // TODO: according to hershey, this should NOT be necessary: https://gitlab.com/oskay/hershey-text/blob/master/hershey-text/hershey.py "- Arbitrary curves are supported within glyphs; we are no longer limited tothe straight line segments used in the historical Hershey format."
+        this.linearize(.1, 100) // TODO: according to hershey, this should NOT be necessary: https://gitlab.com/oskay/hershey-text/blob/master/hershey-text/hershey.py "- Arbitrary curves are supported within glyphs; we are no longer limited tothe straight line segments used in the historical Hershey format."
+        console.log('Font', this.font)
+        console.log('Glyphs', this.glyphs)
     }
 
     _parseSVGInfo(svgString) {
@@ -59,12 +63,12 @@ export default class SVGFont {
         }
     }
 
-    // it appears the "PRINT.svg"
     linearize(tolerance, segments) {
-        // TODO: save by tolerance/segments values into localstorage or cache (only retain last 5 values)
+        // TODO: only retain last 5 values in cache
         // TODO: show loading when dynamically linearizing
         // TODO: put work onto webworker(s) to parallelize the work (low priority since it gets cached)
-        const key = `linearized_${tolerance}_${segments}`
+        const key = `linearized_${tolerance}_${segments}_${hash(this.svgString)}`
+        console.log(key)
         let linearized = get(key)
         if (linearized == null) {
             console.log('linearizing ', key)
@@ -90,13 +94,10 @@ export default class SVGFont {
         } else {
             this.glyphsLinearized = linearized
         }
-        
-        // // TEMP
-        // this.glyphsLinearized = this.glyphs
     }
 
     // returns xml for SVG paths representing this the given string and size
-    textToPaths(text, fontSize, useLinearized = true) {
+    textToPaths(text, fontSize, useLinearized = false) {
         const unitsPerEm = this.font.fontFace['units-per-em']
         const ascent = this.font.fontFace.ascent
         const descent = this.font.fontFace.descent

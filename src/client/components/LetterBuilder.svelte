@@ -20,9 +20,10 @@
   import segments from 'svg-line-segments'
   import linearize from 'svg-linearize'
   import { toPixels, toInches } from 'services/screen'
+  import { cleanseHTML } from 'services/utils'
   
   let svgEl
-  let letter = 'H' //placeholderLetter
+  let letter = placeholderLetter
   let svgPaths = []
   let svgFont = null
   let loading = false
@@ -32,6 +33,7 @@
   let pauseJobAt = null
   let lines = []
   let settings = {}
+  let maxLength = 100 // TODO: make function of fontSize,paddingX/Y,height, and width. use average width of glyphs? line breaks equal # of chars per line
 
   init()
 
@@ -41,7 +43,9 @@
   $: paddingXInches = settings.paddingXInches
   $: paddingYInches = settings.paddingYInches
 
-  $: svgPaths = svgFont ? svgFont.textToPaths(letter, fontSize) : []
+  $: cleansedLetter = cleanseHTML(letter)
+  $: computedLength = cleansedLetter.length // TODO: make function of fontSize,paddingX/Y,height, and width. use average width of glyphs? line breaks equal # of chars per line
+  $: svgPaths = svgFont ? svgFont.textToPaths(cleansedLetter, fontSize) : []
 
   $: height = toPixels(heightInches)
   $: width = toPixels(widthInches)
@@ -54,6 +58,15 @@
     // svgFontPrint = new SVGFont(print)
     const svg = await getPrintFont()
     svgFont = new SVGFont(svg)
+  }
+
+  function validateLetter(e) {
+    if (computedLength > maxLength) {
+      error = 'Max length exceeded'
+      letter = letter.slice(0, maxLength)
+    } else {
+      error = null
+    }
   }
 
   async function printLetter(startIndex) {
@@ -94,41 +107,47 @@
   {:else}
     <Btn icon="print" on:click={e => printLetter(0)} disabled={loading}>Print</Btn>
   {/if}
+  <div class="menu-text">{computedLength} / {maxLength}</div>
 </MenuBottom>
 <Settings onChange={s => settings = s} />
-<textarea class="form-control" bind:value={letter}></textarea>
-<div class="preview">
-  <Alert type="danger" msg={error} />
-  <svg bind:this={svgEl} {width} {height} xmlns="http://www.w3.org/2000/svg">
-    <g transform="translate({paddingX}, {paddingY})">
-      {#each svgPaths as p,i}
-        <g transform="translate(0, {p.horizAdvY}) scale({svgFont.size})">
-          <path 
-            class:printing={currentPrintPathIndex === i} 
-            transform="translate({p.horizAdvX},{p.horizAdvY}) rotate(180) scale(-1, 1)" d={p.d} />
-        </g>
-      {/each}
-    </g>
-  </svg>
-</div>
+<Alert type="danger" msg={error} />
+
+{#if svgFont}
+  <div class="container">
+    <div 
+      class="editor" 
+      contenteditable="true" 
+      bind:innerHTML={letter}
+      on:keyup={validateLetter}
+      style="width: {width}px; height: {height}px; max-height: {height}px; padding: {paddingX}px {paddingY}px; font-size: {fontSize}px; font-family: {svgFont.font.id};"></div>
+      
+    <svg class="preview" bind:this={svgEl} {width} {height} xmlns="http://www.w3.org/2000/svg">
+      <g transform="translate({paddingX}, {paddingY})">
+        {#each svgPaths as p,i}
+          <g transform="translate(0, {p.horizAdvY}) scale({svgFont.size})">
+            <path 
+              class:printing={currentPrintPathIndex === i} 
+              transform="translate({p.horizAdvX},{p.horizAdvY}) rotate(180) scale(-1, 1)" d={p.d} />
+          </g>
+        {/each}
+      </g>
+    </svg>
+  </div>
+{/if}
 
 <style>
-  .preview {
-    text-align: center;
-  }
-  svg {
+  .editor, .preview {
+    color: #222;
     background-color: #fff;
     box-shadow: .4rem .4rem 1.1rem #888888;
     margin: 30px;
+    overflow: hidden;
   }
   path {
     fill: #000;
   }
   .printing {
     fill: red;
-  }
-  textarea {
-    min-height: 10rem;
   }
   input[type="number"] {
     width: 8rem;

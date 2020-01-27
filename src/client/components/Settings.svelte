@@ -31,7 +31,7 @@
       <span class="input-group-text">Inches</span>
     </div>
     <div class="input-group-append">
-      <span class="input-group-text">X</span>
+      <span class="input-group-text">x</span>
     </div>
     <input class="form-control" type="number" bind:value={settings.heightInches} /> 
     <div class="input-group-append">

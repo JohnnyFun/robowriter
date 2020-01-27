@@ -30,9 +30,9 @@
 </script>
 
 <div class="menu">
-  <div class="dpi">DPI: {dpi}</div>
+  <div class="menu-text">DPI: {dpi}</div>
   <div class="actions">
-    Connected to {#if $connected}axidraw machine{:else}simulator{/if}
+    <span class="menu-text mr-3 connection-status">Connected to {#if $connected}axidraw machine{:else}simulator{/if}</span>
     {#if !$connected}
       <a class="btn btn-secondary" href={urls.simulator} target="_blank">
         <Icon type="external-link" />
@@ -63,8 +63,8 @@
           {#if i < usbPorts.length-1}<div class="dropdown-divider"></div>{/if}
         {/each}
       {/if}
-    </DropMenu>
-    <slot />  
+    </DropMenu>  
+    <slot />
   </div>
 </div>
 
@@ -87,7 +87,7 @@
     justify-content: flex-end;
   }
 
-  .dpi {
+  :global(.menu-text) {
     font-size: 1.2rem;
     position: relative;
     top: 1rem;
@@ -96,5 +96,9 @@
   .item {
     font-size: 1.3rem;
     padding: 1rem;
+  }
+
+  .connection-status {
+    top: 0;
   }
 </style>
