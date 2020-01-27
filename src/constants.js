@@ -18,20 +18,5 @@ module.exports = {
     ratio: 12000 / 8720,
     factor: 14.2,
     offset: 20
-  },
-  placeholderLetter: `Hi there!
-  <div><br></div>
-  I made you a package! It has treats for you to put in your mouth, 
-taste, and swallow. Don't eat too many treats though.
-  <div><br></div>
-Here's another paragraph. Each character is an SVG path, so the 
-axidraw machine will be able to consume it and regurgitate it onto 
-paper.
-  <div><br></div>
-Still some work to do to make sure spacing, line height, etc look 
-decent, but this should do the trick!
-  <div><br></div>
-Sincerely,
-  <div><br></div>
-- John`.replace(/\n/g, '')
+  }
 }

@@ -1,4 +1,5 @@
 <script>
+	import localstorage from 'services/local-storage'
 	import Settings from 'components/Settings'
 	import MenuBottom from 'components/MenuBottom'
 	import Alert from 'components/Alert'
@@ -21,9 +22,11 @@
   import linearize from 'svg-linearize'
   import { toPixels, toInches } from 'services/screen'
   import { cleanseHTML } from 'services/utils'
-  
+  import { get,set } from 'services/local-storage'
+
+  const key = 'draft'
   let svgEl
-  let letter = placeholderLetter
+  let letter = get('draft') || ''
   let svgPaths = []
   let svgFont = null
   let loading = false
@@ -33,9 +36,10 @@
   let pauseJobAt = null
   let lines = []
   let settings = {}
-  let maxLength = 100 // TODO: make function of fontSize,paddingX/Y,height, and width. use average width of glyphs? line breaks equal # of chars per line
 
   init()
+
+  $: set(key, letter)
 
   $: fontSize = settings.fontSize
   $: heightInches = settings.heightInches
@@ -44,7 +48,6 @@
   $: paddingYInches = settings.paddingYInches
 
   $: cleansedLetter = cleanseHTML(letter)
-  $: computedLength = cleansedLetter.length // TODO: make function of fontSize,paddingX/Y,height, and width. use average width of glyphs? line breaks equal # of chars per line
   $: svgPaths = svgFont ? svgFont.textToPaths(cleansedLetter, fontSize) : []
 
   $: height = toPixels(heightInches)
@@ -58,15 +61,6 @@
     // svgFontPrint = new SVGFont(print)
     const svg = await getPrintFont()
     svgFont = new SVGFont(svg)
-  }
-
-  function validateLetter(e) {
-    if (computedLength > maxLength) {
-      error = 'Max length exceeded'
-      letter = letter.slice(0, maxLength)
-    } else {
-      error = null
-    }
   }
 
   async function printLetter(startIndex) {
@@ -107,41 +101,48 @@
   {:else}
     <Btn icon="print" on:click={e => printLetter(0)} disabled={loading}>Print</Btn>
   {/if}
-  <div class="menu-text">{computedLength} / {maxLength}</div>
 </MenuBottom>
 <Settings onChange={s => settings = s} />
 <Alert type="danger" msg={error} />
 
 {#if svgFont}
-  <div class="container">
+  <div class="paper-container">
     <div 
       class="editor" 
       contenteditable="true" 
       bind:innerHTML={letter}
-      on:keyup={validateLetter}
-      style="width: {width}px; height: {height}px; max-height: {height}px; padding: {paddingX}px {paddingY}px; font-size: {fontSize}px; font-family: {svgFont.font.id};"></div>
+      style="width: {width}px; 
+        height: {height}px; 
+        max-height: {height}px; 
+        padding: {paddingY-26}px {paddingX}px; 
+        font-size: {fontSize}px; 
+        font-family: {svgFont.font.id};
+        line-height: {svgFont.lineHeight}px;"></div>
       
-    <svg class="preview" bind:this={svgEl} {width} {height} xmlns="http://www.w3.org/2000/svg">
-      <g transform="translate({paddingX}, {paddingY})">
-        {#each svgPaths as p,i}
-          <g transform="translate(0, {p.horizAdvY}) scale({svgFont.size})">
-            <path 
-              class:printing={currentPrintPathIndex === i} 
-              transform="translate({p.horizAdvX},{p.horizAdvY}) rotate(180) scale(-1, 1)" d={p.d} />
-          </g>
-        {/each}
-      </g>
-    </svg>
+    <div class="preview" style="width: {width}px; height: {height}px;">
+      <svg bind:this={svgEl} {width} {height} xmlns="http://www.w3.org/2000/svg">
+        <g transform="translate({paddingX}, {paddingY})">
+          {#each svgPaths as p,i}
+            <g transform="translate(0, {p.horizAdvY}) scale({svgFont.size})">
+              <path 
+                class:printing={currentPrintPathIndex === i} 
+                transform="translate({p.horizAdvX},{p.horizAdvY}) rotate(180) scale(-1, 1)" d={p.d} />
+            </g>
+          {/each}
+        </g>
+      </svg>
+    </div>
   </div>
 {/if}
 
 <style>
   .editor, .preview {
+    margin: 30px auto;
     color: #222;
     background-color: #fff;
     box-shadow: .4rem .4rem 1.1rem #888888;
-    margin: 30px;
     overflow: hidden;
+    padding: 0;
   }
   path {
     fill: #000;
@@ -149,7 +150,7 @@
   .printing {
     fill: red;
   }
-  input[type="number"] {
-    width: 8rem;
+  .paper-container {
+    width: 100%;
   }
 </style>

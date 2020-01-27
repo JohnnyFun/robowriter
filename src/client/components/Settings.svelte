@@ -26,14 +26,31 @@
     <div class="input-group-append">
       <span class="input-group-text">Paper dimensions</span>
     </div>
-    <input class="form-control" type="number" bind:value={settings.widthInches} /> 
+    <input class="form-control" type="number" bind:value={settings.widthInches} min={0} /> 
     <div class="input-group-append">
       <span class="input-group-text">Inches</span>
     </div>
     <div class="input-group-append">
       <span class="input-group-text">x</span>
     </div>
-    <input class="form-control" type="number" bind:value={settings.heightInches} /> 
+    <input class="form-control" type="number" bind:value={settings.heightInches} min={0} /> 
+    <div class="input-group-append">
+      <span class="input-group-text">Inches</span>
+    </div>
+  </div>
+
+  <div class="input-group mb-3 mr-4">
+    <div class="input-group-append">
+      <span class="input-group-text">Margin side</span>
+    </div>
+    <input class="form-control" type="number" bind:value={settings.paddingXInches} step=".1" min={0} /> 
+    <div class="input-group-append">
+      <span class="input-group-text">Inches</span>
+    </div>
+    <div class="input-group-append">
+      <span class="input-group-text">Margin top</span>
+    </div>
+    <input class="form-control" type="number" bind:value={settings.paddingYInches} step=".1" min={0} /> 
     <div class="input-group-append">
       <span class="input-group-text">Inches</span>
     </div>
@@ -43,7 +60,7 @@
     <div class="input-group-append">
       <span class="input-group-text">Font size</span>
     </div>
-    <input class="form-control" type="number" bind:value={settings.fontSize} />
+    <input class="form-control" type="number" bind:value={settings.fontSize} min={0} />
     <div class="input-group-append">
       <span class="input-group-text">Pixels</span>
     </div>
@@ -53,5 +70,8 @@
 <style>
   .settings {
     min-width: 43rem;
+  }
+  input[type="number"] {
+    width: 8rem;
   }
 </style>
