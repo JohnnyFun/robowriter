@@ -4,7 +4,7 @@
 	import Loading from 'components/Loading'
 	import Icon from 'components/Icon'
 	import Btn from 'components/Btn'
-  import { urls } from '../../constants'
+  import { urls } from 'shared/constants'
   import { dpi } from 'services/screen'
   import { print } from 'services/websocket'
   import { getAxiDrawMachines } from 'services/api'

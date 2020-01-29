@@ -1,11 +1,11 @@
 <script>
+	import GlobalErrors from 'components/GlobalErrors'
   // TODO: get variance stuff that hershey advanced apparently does:
   //       hershey's function is "to replace the text in your document with paths from the selected SVG font" https://cdn.evilmadscientist.com/dl/ad/public/HersheyText_v30r5.pdf 
   //       so this app's client-side functionality basically does what hershey does, just less setup
 	import localstorage from 'services/local-storage'
 	import Settings from 'components/Settings'
 	import MenuBottom from 'components/MenuBottom'
-	import Alert from 'components/Alert'
 	import Btn from 'components/Btn'
 	import api from 'services/api'
   import { getPrintFont, getAlienBoy } from 'services/api'
@@ -14,10 +14,11 @@
   import { toPixels, toInches } from 'services/screen'
   import { cleanseHTML } from 'services/utils'
   import { get,set } from 'services/local-storage'
-  import error from 'stores/global-errors'
+  import errors from 'stores/global-errors'
+  import { isEmpty } from 'shared/string-utils'
 
   const key = 'draft'
-  let svgEl
+  let svgContainerEl
   let letter = get('draft') || ''
   let svgPaths = []
   let svgFont = null
@@ -49,7 +50,7 @@
       msg = JSON.parse(msg)
       if (msg.error) {
         console.error(msg.error)
-        $error = msg.error
+        errors.add(msg.error)
       }
       if (msg.info) console.log(msg.info)
       if (msg.connected) connected.set(true)
@@ -63,9 +64,13 @@
   }
 
   async function printLetter() {
-    $error = letter == null || letter.trim() === '' ? 'Type a letter' : null
-    if ($error) return
-    websocket.emit('print', { /* default opts probably fine: https://axidraw.com/doc/cli_api/#options */ })
+    if (isEmpty(letter)) {
+      errors.add('Type a letter')
+      return
+    }
+    websocket.emit('print', { 
+      inputFile: svgContainerEl.innerHTML
+    })
   }
 </script>
 
@@ -77,7 +82,7 @@
   {/if}
 </MenuBottom>
 <Settings onChange={s => settings = s} />
-<Alert type="danger" msg={$error} />
+<GlobalErrors />
 {#if svgFont}
   <div class="paper-container">
     <div class="paper-contents" style="width: {width}px;">
@@ -95,8 +100,8 @@
           line-height: {svgFont.calcLineHeight(fontSize)}px;"></div>
     
       <h3 class="preview-heading">Preview</h3>
-      <div class="preview">
-        <svg bind:this={svgEl} {width} {height} xmlns="http://www.w3.org/2000/svg">
+      <div class="preview" bind:this={svgContainerEl}>
+        <svg {width} {height} xmlns="http://www.w3.org/2000/svg">
           <g transform="translate({paddingX}, {paddingY})">
             {#each svgPaths as p,i}
               <g transform="translate({p.horizAdvX}, {p.horizAdvY}) scale({svgFont.calcSize(fontSize)})">

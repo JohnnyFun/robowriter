@@ -6,28 +6,8 @@ see also: https://evilmadscience.s3.us-east-1.amazonaws.com/dl/ad/private/AxiDra
 const { spawn } = require('child_process')
 const fs = require('fs')
 const path = require('path')
-
-module.exports.print = function print(svgText, onData) {
-  const inputFile = path.resolve(__dirname, `temp/${new Date().getTime()}.svg`)
-  const handleErr = err => onData({ error: err.stack })
-  fs.writeFile(inputFile, svgText, 'utf8', err => {
-    if (err) {
-      handleErr(err)
-      return
-    }
-    const removeTempFile = () => {
-      fs.unlink(inputFile, err => {
-        if (err) handleErr(err)
-      })
-    }
-    _execute({
-      inputFile
-    }, d => {
-      if (d.done) removeTempFile()
-      onData(d)
-    })
-  })
-}
+const { isEmpty } = require('../../shared/string-utils')
+let axidrawCLIProcess = null // for now, only ever running one instance of axidraw. store an array if need to run multiple. and pass an id via websocket to specify which instance you want to abort for instance
 
 module.exports.getAxiDrawMachines = function getAxiDrawMachines() {
   const opts = {
@@ -52,6 +32,34 @@ module.exports.getAxiDrawMachines = function getAxiDrawMachines() {
   })
 }
 
+module.exports.print = function print(opts, onData) {
+  const handleErr = err => {
+    console.error(err)
+    onData({ error: err.stack })
+  }
+  if (isEmpty(opts.inputFile)) return handleErr(new Error('opts.inputFile is required'))
+  const inputFile = path.resolve(__dirname, `./${new Date().getTime()}.svg`)
+  fs.writeFile(inputFile, opts.inputFile, 'utf8', err => {
+    if (err) return handleErr(err)
+    const removeTempFile = () => {
+      fs.unlink(inputFile, err => {
+        if (err) return handleErr(err)
+      })
+    }
+    _execute({
+      ...opts,
+      inputFile
+    }, d => {
+      if (d.done) removeTempFile()
+      onData(d)
+    })
+  })
+}
+
+module.exports.abort = function abort() {
+  if (axidrawCLIProcess) axidrawCLIProcess.kill()
+}
+
 // same as _execute but returns a promise with all output from the command
 function _executeAll(opts) {
   return new Promise((res, rej) => {
@@ -72,7 +80,6 @@ function _executeAll(opts) {
  * @param onData ({ error: string, info: string, connected: bool }) => void
  */
 function _execute(opts, onData) {
-    let axidrawCLIProcess = null
     let cli = 'axicli' // available on the path since you have to pip install to install their cli--no big deal when move this to docker container...
     let args = _convertOptsToCmdArgs(opts)
     let errored = false
@@ -120,6 +127,9 @@ function _convertOptsToCmdArgs(opts) {
     cmdOpts.push(opts.inputFile)
     opts.inputFile = undefined
   }
-  cmdOpts = cmdOpts.concat(Object.keys(opts).map(opt => [`--${opt}`, `${opts[opt]}`]).reduce((a,b) => a.concat(b), []))
+  cmdOpts = cmdOpts.concat(Object.keys(opts)
+    .filter(opt => opts[opt] != null)
+    .map(opt => [`--${opt}`, `${opts[opt]}`])
+    .reduce((a,b) => a.concat(b), []))
   return cmdOpts
 }

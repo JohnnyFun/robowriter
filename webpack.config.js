@@ -8,7 +8,7 @@ const resolveClient = relativePath => path.resolve('./src/client', relativePath 
 const resolveDist = relativePath => path.resolve('./dist', relativePath || '.')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const { ports } = require('./src/constants')
+const { ports } = require('./src/shared/constants')
 
 module.exports = {
 	mode,
@@ -20,7 +20,11 @@ module.exports = {
   resolve: {
 		extensions: ['.mjs', '.js', '.svelte'],
     mainFields: ['svelte', 'browser', 'module', 'main'],
-    modules: [resolveClient(), 'node_modules']
+    modules: [
+			resolveClient(), 
+			path.resolve('./src'),
+			'node_modules'
+		]
   },
   module: {
 		rules: [

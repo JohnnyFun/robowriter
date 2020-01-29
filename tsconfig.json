@@ -13,7 +13,8 @@ https://code.visualstudio.com/docs/languages/jsconfig
 		"paths": {
 			"*": [
 				"./src/server/*",
-				"./src/client/*"
+				"./src/client/*",
+				"./src/*"
 			]
 		}
 	},
