@@ -9,8 +9,7 @@
 	import Btn from 'components/Btn'
 	import api from 'services/api'
   import { getPrintFont, getAlienBoy } from 'services/api'
-  import SVGFont from 'services/svgFont'
-  import { placeholderLetter } from '../../constants'
+  import SVGFont from 'services/svg-font'
   import websocket from 'services/websocket'
   import { toPixels, toInches } from 'services/screen'
   import { cleanseHTML } from 'services/utils'
@@ -22,10 +21,8 @@
   let letter = get('draft') || ''
   let svgPaths = []
   let svgFont = null
-  let loading = false
-  let currentPrintPathIndex = -1
-  let abortJob = false
-  let pauseJobAt = null
+  let printing = false
+  let currentPrintPathIndex = -1 // TODO: depending on what axidraw cli shows as it's drawing, I might be able to re-implement this
   let lines = []
   let settings = {}
 
@@ -59,72 +56,28 @@
     })
     const svg = await getPrintFont()
     svgFont = new SVGFont(svg)
-
-    // const svgFriendly = await getNonPrintFont()
-    // svgFontFriendly = new SVGFont(svgFriendly)
-
-
-    // const alien = await getAlienBoy()
-    // const newSVG = document.createElement('svg')
-    // newSVG.innerHTML = alien
-    // document.body.appendChild(newSVG)
-    // printSVG(newSVG)
   }
 
-  function print(opts) {
-    websocket.emit('print', opts)
+  function abortJob() {
+    websocket.emit('abort', opts)
   }
 
-  async function printLetter(startIndex) {
+  async function printLetter() {
     $error = letter == null || letter.trim() === '' ? 'Type a letter' : null
     if ($error) return
-
-    // TODO: extract svg portion into a component, make one hidden that contains the linearized version...print that
-
-    // pauseJobAt = null
-    // const axiDraw = new AxiDraw()
-    // const size = svgFont.calcSize(fontSize)
-    // await axiDraw.parkPen()
-    // for (let i = startIndex; i < svgPaths.length; i++) {
-    //    // if want to pause, break out--perhaps the pen ink stopped flowing, or they want to change the text at a later part that hasn't been printed yet
-    //   if (pauseJobAt != null) return // TODO: pass a cancellationToken into axidraw class...so it stops immediately?
-    //   currentPrintPathIndex = i
-    //   const p = svgPaths[i]
-    //   const relativeLine = p.line.map(pt => {
-    //     // scale and transform both points
-    //     // const BOT_SCALE = {
-    //     //   ratio: 12000 / 8720,
-    //     //   factor: 14.2,
-    //     //   offset: 20
-    //     // }
-    //     const x = (pt[0] * size + paddingX + p.horizAdvX) / 3
-    //     const y = (pt[1] * size + paddingY + p.horizAdvY) / 3
-    //     console.log(x,y)
-    //     return [x, y]
-    //     // // TODO: also need to transform it accordingly (invert/rotate and move right/down accordingly)....reference "runNextPoint" in robopaint "cncserver.client.paths.js"--they use 
-    //   })
-    //   await axiDraw.drawPath(relativeLine)
-    // }
-    // await axiDraw.parkPen()
-    // currentPrintPathIndex = -1
-    // pauseJobAt = null
+    websocket.emit('print', { /* default opts probably fine: https://axidraw.com/doc/cli_api/#options */ })
   }
 </script>
 
 <MenuBottom>
-  {#if pauseJobAt != null}
-    <input type="number" bind:value={currentPrintPathIndex} max={lines.length-1} min={0} />
-    <Btn icon="play" on:click={e => printLetter(currentPrintPathIndex)} disabled={loading}>Continue</Btn>
-    <Btn icon="redo" on:click={e => printLetter(0)} disabled={loading}>Restart</Btn>
-  {:else if currentPrintPathIndex > -1}
-    <Btn icon="pause-circle" class="warning" on:click={e => pauseJobAt = currentPrintPathIndex} disabled={loading}>Pause</Btn>
+  {#if printing}
+    <Btn icon="pause-circle" class="warning" on:click={abortJob}>Abort</Btn>
   {:else}
-    <Btn icon="print" on:click={e => printLetter(0)} disabled={loading}>Print</Btn>
+    <Btn icon="print" on:click={e => printLetter(0)}>Print</Btn>
   {/if}
 </MenuBottom>
 <Settings onChange={s => settings = s} />
 <Alert type="danger" msg={$error} />
-
 {#if svgFont}
   <div class="paper-container">
     <div class="paper-contents" style="width: {width}px;">

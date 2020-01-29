@@ -29,7 +29,7 @@ module.exports.print = function print(svgText, onData) {
   })
 }
 
-module.exports.getUsbPorts = function getUsbPorts() {
+module.exports.getAxiDrawMachines = function getAxiDrawMachines() {
   const opts = {
     mode: 'manual',
     manual_cmd: 'list_names'

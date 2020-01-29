@@ -13,7 +13,7 @@ export const getPrintFont = () => getAsset('QEMeganRikliPrint.svg') // seems to 
 // export const getPrintFont = () => getAsset('hershey-text_svg_fonts_EMSAllure.svg')
 export const getAlienBoy = () => getAsset('alien-boy.svg')
 
-export const getUsbPorts = () => fetch(urls.server + '/api/usbports').then(handleApiResponse)
+export const getAxiDrawMachines = () => fetch(urls.server + '/api/axidrawMachines').then(handleApiResponse)
 
 async function handleApiResponse(res) {
   if (res.ok) return res.json()

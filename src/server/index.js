@@ -15,11 +15,11 @@ const io = require('socket.io')(http, {
       res.end();
   }
 })
-const { print, getUsbPorts } = require('./services/axidraw')
+const { print, getAxiDrawMachines } = require('./services/axidraw')
 
 configureClient()
 app.use('/assets', express.static('src/server/assets'))
-app.get('/api/usbports', handled(handleGetUsbPorts))
+app.get('/api/axidrawMachines', handled(handleGetAxiDrawMachines))
 io.on('connection', onNewSocketConnection)
 app.use(globalErrors)
 http.listen(ports.server, () => console.log(`Example app listening at ${urls.server}`))
@@ -49,8 +49,8 @@ function handled(asyncFunc) {
   return async (req, res, next) => asyncFunc(req, res, next).catch(next)
 }
 
-async function handleGetUsbPorts(req, res) {
-  const ports = await getUsbPorts()
+async function handleGetAxiDrawMachines(req, res) {
+  const ports = await getAxiDrawMachines()
   res.json(ports)
 }
 

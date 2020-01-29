@@ -1,18 +1,15 @@
 const server = 5000
 const client = 5002
-const simulator = 5003
 const buildUrl = port => `http://localhost:${port}`
 
 module.exports = {
   ports: {
     server,
-    client,
-    simulator
+    client
   },
   urls: {
     server: buildUrl(server),
-    client: buildUrl(client),
-    simulator: buildUrl(simulator)
+    client: buildUrl(client)
   },
   axidrawCLI: 
     // default is good. probably don't use 1 or 3 (see below for details)

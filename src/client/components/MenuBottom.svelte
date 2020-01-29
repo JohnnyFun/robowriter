@@ -7,25 +7,22 @@
   import { urls } from '../../constants'
   import { dpi } from 'services/screen'
   import { print } from 'services/websocket'
-  import { getUsbPorts } from 'services/api'
+  import { getAxiDrawMachines } from 'services/api'
   
-  // note if you want to connect multiple machines and print to all of them, you'd just need to fire up multiple instances of cncserver and hit all their apis the same as you draw
-  // else you could set up PIs hooked to each of them, each of which could pull from a central db of jobs
-  // for now, just keep it simple though...single machine, connected to single computer
-  const key = 'connectedTo'
+  
+  const key = 'printTo'
 
   let status = null
-  let usbPorts = null
-  let connectedTo = get(key)
-  $: set(key, connectedTo)
+  let axiDrawMachines = null
+  let printTo = get(key)
+  $: set(key, printTo)
   
-  // connectTo(connectedTo)
-  getUsbPorts()
-    .then(r => usbPorts = r) 
-    .catch(err => usbPorts = [])
+  getAxiDrawMachines()
+    .then(r => axiDrawMachines = r) 
+    .catch(err => axiDrawMachines = [])
 
-  function connectTo(usbPort) {
-    connectedTo = usbPort
+  function connectTo(axiDrawMachine) {
+    printTo = axiDrawMachine
   }
 </script>
 
@@ -33,18 +30,18 @@
   <div class="menu-text">DPI: {dpi}</div>
   <div class="actions">
     <DropMenu btnIcon="usb" label="Change connection">
-      {#if usbPorts == null}
+      {#if axiDrawMachines == null}
         <Loading />
       {:else}
-        {#each usbPorts as p,i}
+        {#each axiDrawMachines as p,i}
           <div class="item">
             <p>
               {#if p.manufacturer}{p.manufacturer} - {/if}
               {p.name} 
             </p>
             <div>
-              <Btn class="sm {connectedTo === p.value ? 'btn-primary' : 'btn-secondary'}" on:click={e => connectTo(p.value)}>
-                {#if connectedTo === p.value}
+              <Btn class="sm {printTo === p.value ? 'btn-primary' : 'btn-secondary'}" on:click={e => connectTo(p.value)}>
+                {#if printTo === p.value}
                   Re-Connect
                 {:else}
                   Connect
@@ -52,7 +49,7 @@
               </Btn>
             </div>
           </div>
-          {#if i < usbPorts.length-1}<div class="dropdown-divider"></div>{/if}
+          {#if i < axiDrawMachines.length-1}<div class="dropdown-divider"></div>{/if}
         {/each}
       {/if}
     </DropMenu>  

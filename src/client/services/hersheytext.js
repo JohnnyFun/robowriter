@@ -1,3 +1,6 @@
+// TODO: not using this, but good for reference for now in case we need it. doesn't look like it implements the variance
+//        stuff that hershey advanced does though...
+
 /**
  * @file The node module for easily including the letter data or rendering text.
  */
