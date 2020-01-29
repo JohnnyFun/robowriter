@@ -1,3 +1,4 @@
+// TODO: probably not using this after all, since using cli now
 // communicates with the cncserver via http
 // https://github.com/techninja/cncserver
 // endpoing docs: https://github.com/techninja/cncserver/blob/master/API.md
@@ -15,12 +16,9 @@ export default class Axidraw {
    */
   async drawPath(path) {
     await this.setPenState('state=up');
-
     for (let i = 0; i < path.length; i++) {
-      const [x, y] = path[i];
-
+      let [x, y] = path[i];
       await this.setPenState(`x=${x}&y=${y}`);
-
       if (i === 0) await this.setPenState('state=draw');
     }
   }

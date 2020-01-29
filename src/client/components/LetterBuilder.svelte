@@ -1,28 +1,21 @@
 <script>
+  // TODO: get variance stuff that hershey advanced apparently does:
+  //       hershey's function is "to replace the text in your document with paths from the selected SVG font" https://cdn.evilmadscientist.com/dl/ad/public/HersheyText_v30r5.pdf 
+  //       so this app's client-side functionality basically does what hershey does, just less setup
 	import localstorage from 'services/local-storage'
 	import Settings from 'components/Settings'
 	import MenuBottom from 'components/MenuBottom'
 	import Alert from 'components/Alert'
 	import Btn from 'components/Btn'
 	import api from 'services/api'
-  import { getPrintFont } from 'services/api'
+  import { getPrintFont, getAlienBoy } from 'services/api'
   import SVGFont from 'services/svgFont'
-  import { placeholderLetter, BOT_SCALE } from '../../constants'
-  import AxiDraw from 'services/axidraw'
-
-  // TODO: sounds like this is basically what hershey does. But it does it better. 
-  // So either call into their python, or find the python you need and translate--it looks like 
-  // they've handled a lot of scaling logic too, so get this working in inkscape and try to hook it 
-  // to the simulator? and then widdle down from there
-  // otherwise, look through the code and try to convert accordingly
-  // https://cdn.evilmadscientist.com/dl/ad/public/HersheyText_v30r5.pdf
-  // " Its function is to replace the text in your document with paths from the selected SVG font" 
-  // UPDATE: looks like this https://axidraw.com/doc/cli_api/#introduction allows giving an svg to a cli command...hmmm, look at how they handle curve commands in svg paths
-  import segments from 'svg-line-segments'
-  import linearize from 'svg-linearize'
+  import { placeholderLetter } from '../../constants'
+  import websocket from 'services/websocket'
   import { toPixels, toInches } from 'services/screen'
   import { cleanseHTML } from 'services/utils'
   import { get,set } from 'services/local-storage'
+  import error from 'stores/global-errors'
 
   const key = 'draft'
   let svgEl
@@ -30,7 +23,6 @@
   let svgPaths = []
   let svgFont = null
   let loading = false
-  let error = null
   let currentPrintPathIndex = -1
   let abortJob = false
   let pauseJobAt = null
@@ -56,38 +48,66 @@
   $: paddingY = toPixels(paddingYInches)
 
   async function init() {
-    // const { view, print } = await getSvgFont()
-    // svgFont = new SVGFont(view)
-    // svgFontPrint = new SVGFont(print)
+    websocket.on('axidraw', msg => {
+      msg = JSON.parse(msg)
+      if (msg.error) {
+        console.error(msg.error)
+        $error = msg.error
+      }
+      if (msg.info) console.log(msg.info)
+      if (msg.connected) connected.set(true)
+    })
     const svg = await getPrintFont()
     svgFont = new SVGFont(svg)
+
+    // const svgFriendly = await getNonPrintFont()
+    // svgFontFriendly = new SVGFont(svgFriendly)
+
+
+    // const alien = await getAlienBoy()
+    // const newSVG = document.createElement('svg')
+    // newSVG.innerHTML = alien
+    // document.body.appendChild(newSVG)
+    // printSVG(newSVG)
+  }
+
+  function print(opts) {
+    websocket.emit('print', opts)
   }
 
   async function printLetter(startIndex) {
-    error = letter == null || letter.trim() === '' ? 'Type a letter' : null
-    if (error) return
+    $error = letter == null || letter.trim() === '' ? 'Type a letter' : null
+    if ($error) return
 
-    // convert svg paths to lines (coordinate arrays)
-    lines = segments(svgEl) 
+    // TODO: extract svg portion into a component, make one hidden that contains the linearized version...print that
 
-    // communicate to the axidraw machine
-    pauseJobAt = null
-    const axiDraw = new AxiDraw()
-    await axiDraw.parkPen()
-    for (let i = startIndex; i < lines.length; i++) {
-       // if want to pause, break out--perhaps the pen ink stopped flowing, or they want to change the text at a later part that hasn't been printed yet
-      if (pauseJobAt != null) return // TODO: pass a cancellationToken into axidraw class...so it stops immediately?
-      currentPrintPathIndex = i
-      const line = lines[i]
-      const relativeLine = line.map(p => [
-        p[0] / BOT_SCALE.factor + BOT_SCALE.offset,
-        p[1] / BOT_SCALE.factor * BOT_SCALE.ratio
-      ])
-      await axiDraw.drawPath(relativeLine)
-    }
-    await axiDraw.parkPen()
-    currentPrintPathIndex = -1
-    pauseJobAt = null
+    // pauseJobAt = null
+    // const axiDraw = new AxiDraw()
+    // const size = svgFont.calcSize(fontSize)
+    // await axiDraw.parkPen()
+    // for (let i = startIndex; i < svgPaths.length; i++) {
+    //    // if want to pause, break out--perhaps the pen ink stopped flowing, or they want to change the text at a later part that hasn't been printed yet
+    //   if (pauseJobAt != null) return // TODO: pass a cancellationToken into axidraw class...so it stops immediately?
+    //   currentPrintPathIndex = i
+    //   const p = svgPaths[i]
+    //   const relativeLine = p.line.map(pt => {
+    //     // scale and transform both points
+    //     // const BOT_SCALE = {
+    //     //   ratio: 12000 / 8720,
+    //     //   factor: 14.2,
+    //     //   offset: 20
+    //     // }
+    //     const x = (pt[0] * size + paddingX + p.horizAdvX) / 3
+    //     const y = (pt[1] * size + paddingY + p.horizAdvY) / 3
+    //     console.log(x,y)
+    //     return [x, y]
+    //     // // TODO: also need to transform it accordingly (invert/rotate and move right/down accordingly)....reference "runNextPoint" in robopaint "cncserver.client.paths.js"--they use 
+    //   })
+    //   await axiDraw.drawPath(relativeLine)
+    // }
+    // await axiDraw.parkPen()
+    // currentPrintPathIndex = -1
+    // pauseJobAt = null
   }
 </script>
 
@@ -103,7 +123,7 @@
   {/if}
 </MenuBottom>
 <Settings onChange={s => settings = s} />
-<Alert type="danger" msg={error} />
+<Alert type="danger" msg={$error} />
 
 {#if svgFont}
   <div class="paper-container">
@@ -118,18 +138,18 @@
           max-height: {height}px; 
           padding: {paddingY-26}px {paddingX}px; 
           font-size: {fontSize}px; 
-          font-family: {svgFont.font.id};
-          line-height: {svgFont.lineHeight}px;"></div>
+          font-family: {svgFont.font.id.replace('Print', '') + 'CAP'};
+          line-height: {svgFont.calcLineHeight(fontSize)}px;"></div>
     
       <h3 class="preview-heading">Preview</h3>
       <div class="preview">
         <svg bind:this={svgEl} {width} {height} xmlns="http://www.w3.org/2000/svg">
           <g transform="translate({paddingX}, {paddingY})">
             {#each svgPaths as p,i}
-              <g transform="translate(0, {p.horizAdvY}) scale({svgFont.size})">
+              <g transform="translate({p.horizAdvX}, {p.horizAdvY}) scale({svgFont.calcSize(fontSize)})">
                 <path 
                   class:printing={currentPrintPathIndex === i} 
-                  transform="translate({p.horizAdvX},{p.horizAdvY}) rotate(180) scale(-1, 1)" d={p.d} />
+                  transform="rotate(180) scale(-1, 1)" d={p.d} /> <!-- svg glyphs' coordinate system has y-axis pointing downward transform="rotate(180) scale(-1, 1)" -->
               </g>
             {/each}
           </g>

@@ -1,8 +1,22 @@
+## Description
+
+  - build up an svg version of the letter with an svg font
+  - send that svg to axidraw cli to plot with axidraw machine via usb
+
 ## Setup
 
-- install node/npm
+- TODO: setup docker container with the following:
+  - node/npm
+  - python 3.6 (for axidraw cli): https://www.python.org/download/
+  - pip: https://pip.pypa.io/en/stable/installing/
+  - axidraw cli: https://axidraw.com/doc/cli_api/
+    - download it
+    - cd /Users/username/Documents/axidraw-api/ 
+    - `pip install -r requirements.txt` -- (On Windows, you may need to use "python -m pip install .")
+  - open the ports for server and client in constants.js
+
 - `npm i`
-- `npm start` 
+- `npm start`
   - starts the webpack-dev-server and the express server, watching both for changes
 
 ## Using
@@ -10,20 +24,11 @@
 - axidraw machine
   - plugin machine
   - connect machine usb to computer that is running this app
-  - type into wysiwyg editor
+  - type into the letter input
   - click "print"
-    - you can also print using the simulator
-    - you can also debug by taking a look at what svg paths will be sent to the printer
 
 ## Tests
 
 - `npm run test`
   - take a look in ./tests folder
-
-
-## Adding Font
-
-- used online ttf to svg converter to generate the svg glyphs
-  - https://convertio.co/download/817b03b5afd5063d4e178b7acde94792c887cc/
-- then used `SVGFont.js` to convert the glyphs to svg `path`s
 

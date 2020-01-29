@@ -53,7 +53,27 @@ Scaling notes:
 
 
 -----------------
+SOLUTION
+  - figure out where the cli sends x,y linearized commands to machine
+    - determine how they convert the svg paths to those x,y coords
+      - either do the same in js client-side. OR use the cli and tell it to give an output SVG!
+        - definitely looks like the axidraw cli is the way to go.
+          - if so, tear out cnc server/axidraw services (don't worry it's still in source control if you want to bring it back)
+
 axidraw cli or cncserver rest api?
+  - SOLUTION  
+    - CLI
+      - same software that inkscape axidraw extension uses under the hood
+      - simply take an svg as input and appears to do all the complex conversions and bounds
+      - VERY official documentation
+      - options to specify: (see C:\dev\robowriter\src\server\services\AxiDraw_API\AxiDraw_API_v256\pyaxidraw\axidraw_conf.py)
+        - model
+        - 
+      - Questions for Chris:
+        - printing many of the same? Or many slightly different?
+          - if same, can print same job to all
+            - else, we can setup ability to define variables in the letter like {NAME} and you could plugin in a list of names which would result in it printing to multiple machines slightly tweaked
+              - BUT that might be overkill and actually less intuitive than simply manually changing in between prints?
   - sounds like cli simply takes an svg
     - but probably doesn't have a simulator? Maybe there's a different simulator?
     - might be cool to just build the svg up client-side, then send it server side and call the axidraw CLI--if that works, we might pretty much be complete!

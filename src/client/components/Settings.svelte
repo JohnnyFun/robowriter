@@ -26,14 +26,14 @@
     <div class="input-group-append">
       <span class="input-group-text">Paper dimensions</span>
     </div>
-    <input class="form-control" type="number" bind:value={settings.widthInches} min={0} /> 
+    <input class="form-control" type="number" bind:value={settings.widthInches} min={0} step=".5" /> 
     <div class="input-group-append">
       <span class="input-group-text">Inches</span>
     </div>
     <div class="input-group-append">
       <span class="input-group-text">x</span>
     </div>
-    <input class="form-control" type="number" bind:value={settings.heightInches} min={0} /> 
+    <input class="form-control" type="number" bind:value={settings.heightInches} min={0} step=".5" /> 
     <div class="input-group-append">
       <span class="input-group-text">Inches</span>
     </div>

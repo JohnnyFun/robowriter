@@ -2,7 +2,6 @@ const cors = require('cors')
 const { ports, urls } = require('../constants')
 const prod = process.env.NODE_ENV === 'production'
 const express = require('express')
-const getUsbPorts = require('./services/usbports')
 const app = express()
 const http = require('http').createServer(app)
 const io = require('socket.io')(http, {
@@ -16,13 +15,13 @@ const io = require('socket.io')(http, {
       res.end();
   }
 })
-const onWebsocketConnection = require('./services/axidraw')
+const { print, getUsbPorts } = require('./services/axidraw')
 
 configureClient()
 app.use('/assets', express.static('src/server/assets'))
-app.get('/api/usbports', handleGetUsbPorts)
+app.get('/api/usbports', handled(handleGetUsbPorts))
+io.on('connection', onNewSocketConnection)
 app.use(globalErrors)
-io.on('connection', onWebsocketConnection)
 http.listen(ports.server, () => console.log(`Example app listening at ${urls.server}`))
 
 
@@ -39,13 +38,26 @@ function configureClient() {
   }
 }
 
-// just show entire error client-side for now
+// just show entire error client-side for now and set status to 400 so browsers show full stack too
 function globalErrors(err, req, res, next) {
-  console.error(err.stack)
-  res.status(400).send(err.stack)
+  if (res.headersSent) return next(err)
+  return res.status(err.status || 400).json({ error: err.stack || err.message || err }) 
+}
+
+// so unhandled promise rejection get to the global error handler
+function handled(asyncFunc) {
+  return async (req, res, next) => asyncFunc(req, res, next).catch(next)
 }
 
 async function handleGetUsbPorts(req, res) {
   const ports = await getUsbPorts()
   res.json(ports)
+}
+
+function onNewSocketConnection(socket) {
+  socket.on('print', opts => {
+    const cliOpts = opts != null && opts.trim() !== '' ? JSON.parse(opts) : null
+    const onData = msgObj => socket.emit('axidraw', JSON.stringify(msgObj))
+    print(cliOpts, onData)
+  })
 }

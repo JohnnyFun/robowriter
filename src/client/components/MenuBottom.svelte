@@ -2,12 +2,11 @@
 	import DropMenu from 'components/DropMenu'
 	import { get,set } from 'services/local-storage'
 	import Loading from 'components/Loading'
-	import connected from 'stores/connected'
 	import Icon from 'components/Icon'
 	import Btn from 'components/Btn'
   import { urls } from '../../constants'
   import { dpi } from 'services/screen'
-  import { startCncServer } from 'services/websockets'
+  import { print } from 'services/websocket'
   import { getUsbPorts } from 'services/api'
   
   // note if you want to connect multiple machines and print to all of them, you'd just need to fire up multiple instances of cncserver and hit all their apis the same as you draw
@@ -20,11 +19,12 @@
   let connectedTo = get(key)
   $: set(key, connectedTo)
   
-  connectTo(connectedTo)
-  getUsbPorts().then(r => usbPorts = r) 
+  // connectTo(connectedTo)
+  getUsbPorts()
+    .then(r => usbPorts = r) 
+    .catch(err => usbPorts = [])
 
   function connectTo(usbPort) {
-    startCncServer(usbPort)
     connectedTo = usbPort
   }
 </script>
@@ -32,14 +32,6 @@
 <div class="menu">
   <div class="menu-text">DPI: {dpi}</div>
   <div class="actions">
-    <span class="menu-text mr-3 connection-status">Connected to {#if $connected}axidraw machine{:else}simulator{/if}</span>
-    {#if !$connected}
-      <a class="btn btn-secondary" href={urls.simulator} target="_blank">
-        <Icon type="external-link" />
-        Open simulator
-      </a>
-    {/if}
-
     <DropMenu btnIcon="usb" label="Change connection">
       {#if usbPorts == null}
         <Loading />
@@ -96,9 +88,5 @@
   .item {
     font-size: 1.3rem;
     padding: 1rem;
-  }
-
-  .connection-status {
-    top: 0;
   }
 </style>

@@ -7,7 +7,7 @@
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "serialport": "^8.0.6",
+    "parse-svg-path": "^0.1.2",
     "socket.io": "^2.3.0",
     "svg-line-segments": "^1.0.0",
     "svg-linearize": "^1.1.0"
