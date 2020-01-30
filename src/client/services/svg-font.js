@@ -63,7 +63,7 @@ export default class SVGFont {
     }
 
     calcLineHeight(fontSize) {
-        return this.font.fontFace.ascent * this.calcSize(fontSize)
+        return (this.font.fontFace.ascent + 800) * this.calcSize(fontSize)
     }
 
     // returns paths objects that can be translated into either svg <path> elements or x,y coordinate lines to send to axidraw machine
@@ -96,9 +96,7 @@ export default class SVGFont {
                 }
                 horizAdvX += (this.glyphs[char]['horiz-adv-x'] || spaceCharWidth) * size
             }
-            const isEmptyLine = line.length === 0
-            const offSetY = isEmptyLine ? -1700 * size : 0
-            horizAdvY += lineHeight + offSetY
+            horizAdvY += lineHeight
         })
         return paths
     }

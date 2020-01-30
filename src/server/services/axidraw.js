@@ -65,7 +65,7 @@ function _executeAll(opts) {
   return new Promise((res, rej) => {
     let allData = []
     _execute(opts, d => {
-      allData.push(d.error ? `ERROR: ${d.error}` : `INFO: ${d.info}`)
+      allData.push(d.error ? d.error : d.info)
       if (d.done) {
         const allInfo = allData.join('\n')
         d.error != null ? rej(allInfo) : res(allInfo)
