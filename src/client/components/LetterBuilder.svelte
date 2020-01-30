@@ -107,7 +107,7 @@
   }
 
   async function init() {
-    websocket.on('axidraw', msg => {
+    websocket.on('print', msg => {
       msg = JSON.parse(msg)
       if (msg.error) {
         console.error(msg.error)
@@ -124,7 +124,7 @@
     websocket.emit('abort', opts)
   }
 
-  async function printLetter() {
+  async function printLetter(opts = {}) {
     if (isEmpty(letter)) {
       errors.add('Type a letter')
       return
@@ -139,7 +139,8 @@
   {#if printing}
     <Btn icon="pause-circle" class="warning" on:click={abortJob}>Abort</Btn>
   {:else}
-    <Btn icon="print" on:click={printLetter}>Print</Btn>
+    <!--TODO: server should initially send back both hershey preview AND path preview. Ability to toggle to see both in a modal-->
+    <Btn icon="print" on:click={e => printLetter()}>Print</Btn>
   {/if}
 </MenuBottom>
 <Settings onChange={s => settings = s} />
@@ -167,7 +168,8 @@
         
       <div class="preview" style="width: {width}px; height: {height}px;">
         <!-- this generated svg can be opened in inkscape so you can use inkscape tooling if need be prior to printing -->
-        <svg  
+        <svg
+          bind:this={svgContainerEl}  
           xmlns:dc="http://purl.org/dc/elements/1.1/"
           xmlns:cc="http://creativecommons.org/ns#"
           xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"

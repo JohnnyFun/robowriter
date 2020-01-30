@@ -11,6 +11,10 @@ module.exports = {
     server: buildUrl(server),
     client: buildUrl(client)
   },
+  fonts: {
+    QEMeganRikli: 'assets/latest/QEMeganRikli.svg',
+    QEMeganRikliCAP: 'assets/latest/QEMeganRikliCAP.svg'
+  },
   axidrawCLI: 
     // default is good. probably don't use 1 or 3 (see below for details)
     PORTCODES = {

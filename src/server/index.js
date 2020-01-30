@@ -1,6 +1,5 @@
 const cors = require('cors')
 const { ports, urls } = require('../shared/constants')
-const { isEmpty } = require('../shared/string-utils')
 const prod = process.env.NODE_ENV === 'production'
 const express = require('express')
 const app = express()
@@ -17,6 +16,7 @@ const io = require('socket.io')(http, {
   }
 })
 const { getAxiDrawMachines, print, abort } = require('./services/axidraw')
+const { convertTextToPaths } = require('./services/hershey-advanced')
 
 configureClient()
 app.use('/assets', express.static('src/server/assets'))
@@ -56,6 +56,7 @@ async function handleGetAxiDrawMachines(req, res) {
 }
 
 function onNewSocketConnection(socket) {
-  socket.on('print', opts => print(opts, msgObj => socket.emit('axidraw', JSON.stringify(msgObj))))
+  socket.on('preview', opts => convertTextToPaths(opts, msgObj => socket.emit('preview', JSON.stringify(msgObj))))
+  socket.on('print', opts => print(opts, msgObj => socket.emit('print', JSON.stringify(msgObj))))
   socket.on('abort', abort)
 }
