@@ -65,39 +65,4 @@ export default class SVGFont {
     calcLineHeight(fontSize) {
         return (this.font.fontFace.ascent + 800) * this.calcSize(fontSize)
     }
-
-    // returns paths objects that can be translated into either svg <path> elements or x,y coordinate lines to send to axidraw machine
-    textToPaths(text, fontSize) {
-        const unitsPerEm = this.font.fontFace['units-per-em']
-        const spaceCharWidth = unitsPerEm / 3
-        const size = this.calcSize(fontSize)
-        const lineHeight = this.calcLineHeight(fontSize)
-        const lines = text.split('\n')
-        let paths = []
-        let horizAdvY = 0
-        lines.forEach(line => {
-            let horizAdvX = 0
-            for (let i = 0; i < line.length; i++) {
-                const char = line[i];
-                const glyph = this.glyphs[char]
-                if (glyph == null) {
-                    console.warn(`Did not find glyph for "${char}"`)
-                    continue
-                }
-                const d = this.glyphs[char].d
-                if (d) {
-                    // space chars, for instance don't have a d, but we want to move horizontally still
-                    paths.push({
-                        horizAdvX,
-                        horizAdvY,
-                        d,
-                        line: this.glyphs[char].line
-                    })
-                }
-                horizAdvX += (this.glyphs[char]['horiz-adv-x'] || spaceCharWidth) * size
-            }
-            horizAdvY += lineHeight
-        })
-        return paths
-    }
 }

@@ -1,5 +1,6 @@
 <script>
   import { tick } from 'svelte'
+  import dayjs from 'dayjs'
 	import GlobalErrors from 'components/GlobalErrors'
   // TODO: get variance stuff that hershey advanced apparently does:
   //       hershey's function is "to replace the text in your document with paths from the selected SVG font" https://cdn.evilmadscientist.com/dl/ad/public/HersheyText_v30r5.pdf 
@@ -12,8 +13,7 @@
   import { getPrintFont, getAlienBoy } from 'services/api'
   import SVGFont from 'services/svg-font'
   import websocket from 'services/websocket'
-  import { toPixels, toInches } from 'services/screen'
-  import { cleanseHTML } from 'services/utils'
+  import { inchesToPixels, pixelsToInches, inchesToMM, pixelsToMM } from 'services/screen'
   import { get,set } from 'services/local-storage'
   import errors from 'stores/global-errors'
   import { isEmpty } from 'shared/string-utils'
@@ -21,12 +21,11 @@
   const key = 'draft'
   let svgContainerEl
   let letter = get('draft') || ''
-  let svgPaths = []
   let svgFont = null
   let printing = false
   let currentPrintPathIndex = -1 // TODO: depending on what axidraw cli shows as it's drawing, I might be able to re-implement this
-  let lines = []
   let settings = {}
+  let textLines = []
 
   init()
 
@@ -38,15 +37,67 @@
   $: paddingXInches = settings.paddingXInches
   $: paddingYInches = settings.paddingYInches
 
-  $: cleansedLetter = cleanseHTML(letter)
-  $: svgPaths = svgFont ? svgFont.textToPaths(cleansedLetter, fontSize) : []
+  $: height = inchesToPixels(heightInches)
+  $: width = inchesToPixels(widthInches)
+  $: paddingX = inchesToPixels(paddingXInches)
+  $: paddingY = inchesToPixels(paddingYInches)
 
-  $: height = toPixels(heightInches)
-  $: width = toPixels(widthInches)
-  $: paddingX = toPixels(paddingXInches)
-  $: paddingY = toPixels(paddingYInches)
+  $: heightMM = inchesToMM(heightInches)
+  $: widthMM = inchesToMM(widthInches)
+  $: paddingXMM = inchesToMM(paddingXInches)
+  $: paddingYMM = inchesToMM(paddingYInches)
+
+  $: lineHeight = svgFont ? pixelsToMM(svgFont.calcLineHeight(fontSize)) : 0
+  // $: maxLines = Math.ceil((height - paddingY*2) / lineHeight/2)
+  // $: console.log('maxLines', maxLines)
 
   $: if (letter) cleanLetter()
+
+  $: letter, svgFont, getTextLines()
+
+  function getTextLines() {
+    if (svgFont == null) return []
+    if (isEmpty(letter)) return []
+    const parser = new DOMParser()
+    const parsed = parser.parseFromString(letter, 'text/html')
+    const paragraphs = Array.from(parsed.querySelectorAll('.line-break'))
+    let x = paddingXMM
+    let y = paddingYMM
+    let lines = []
+    const unitsPerEm = svgFont.font.fontFace['units-per-em']
+    const spaceCharWidth = unitsPerEm / 3
+    const size = svgFont.calcSize(fontSize)
+    const maxLineWidth = width - paddingX*2
+    paragraphs.forEach(lb => {
+      const text = lb.innerText.replace(/\n/g, '')
+      const words = text.split(/\s/).map(w => w + ' ') // not word boundary, since we want periods and commas to stay with their word, for instance // TODO: unit test this
+      let currentLine = ''
+      let currentLineWidth = 0
+      for (let i = 0; i < words.length; i++) {
+        const w = words[i]
+        const wordWidth = Array.from(w).map(char => {
+          const charWidth = svgFont.glyphs[char]['horiz-adv-x'] || spaceCharWidth
+          return charWidth * size
+        }).reduce((a,b) => a + b)
+        const willConsume = currentLineWidth + wordWidth
+        if (willConsume < maxLineWidth) {
+          // enough room for this word
+          currentLine += w
+          currentLineWidth += wordWidth
+          if (i === words.length-1) lines.push({ text: currentLine, x, y })
+        } else {
+          // break to next line
+          lines.push({ text: currentLine, x, y })
+          y += lineHeight
+          currentLine = w
+          currentLineWidth = wordWidth
+        }
+      }
+      const yOffset = lines.length === 0 ? -fontSize*0.2857142857142857 : 0 // paragraph
+      y += lineHeight + yOffset
+    })
+    textLines = lines
+  }
 
   async function cleanLetter() {
     await tick() // so cursor stays put while typing
@@ -95,6 +146,10 @@
 <!-- <GlobalErrors /> -->
 <!-- TODO: calculate chars per line and max lines based on font-size, maring-top/maring-bottom, and height/width -->
 <!-- and then you can accurately generate text and line break svgs like inkscape and also add a num char limit shown at bottom as they type and prevent them from typing any more and warn when pasted in text overflowed (make them dismiss the error)-->
+<!-- TODO: more settings: 
+    - override lineheight ratio to font-size and character spacing ratio to font-size
+    - toggle auto-acronym?
+  -->
 {#if svgFont}
   <div class="paper-container">
     <div class="paper-contents" style="width: {width}px;">
@@ -109,6 +164,88 @@
           font-size: {fontSize}px; 
           font-family: {svgFont.font.id};
           line-height: {svgFont.calcLineHeight(fontSize)}px;"></div>
+        
+      <div class="preview" style="width: {width}px; height: {height}px;">
+        <!-- this generated svg can be opened in inkscape so you can use inkscape tooling if need be prior to printing -->
+        <svg  
+          xmlns:dc="http://purl.org/dc/elements/1.1/"
+          xmlns:cc="http://creativecommons.org/ns#"
+          xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+          xmlns:svg="http://www.w3.org/2000/svg"
+          xmlns="http://www.w3.org/2000/svg"
+          xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+          xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+          id="svg{new Date().getTime()}"
+          version="1.1"
+          viewBox="0 0 {widthMM} {heightMM}"
+          height="{heightMM}mm"
+          width="{widthMM}mm"
+          inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
+          sodipodi:docname="robowriter-letter-{dayjs().format('YYYY-MM-DD_HH-mm')}.svg">
+          <sodipodi:namedview
+            id="base"
+            pagecolor="#ffffff"
+            bordercolor="#666666"
+            borderopacity="1.0"
+            inkscape:pageopacity="0.0"
+            inkscape:pageshadow="2"
+            inkscape:zoom="1"
+            inkscape:cx="187.20597"
+            inkscape:cy="859.39627"
+            inkscape:document-units="mm"
+            inkscape:current-layer="layer1"
+            showgrid="false"
+            inkscape:window-width="1920"
+            inkscape:window-height="1017"
+            inkscape:window-x="-8"
+            inkscape:window-y="-8"
+            inkscape:window-maximized="1" />
+          <metadata
+            id="metadata5">
+            <rdf:RDF>
+              <cc:Work
+                rdf:about="">
+                <dc:format>image/svg+xml</dc:format>
+                <dc:type
+                  rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+                <dc:title></dc:title>
+              </cc:Work>
+            </rdf:RDF>
+          </metadata>
+          <g
+            inkscape:label="Layer 1"
+            inkscape:groupmode="layer"
+            id="layer1">
+            <text
+              xml:space="preserve"
+              style="font-style:normal;
+                font-weight:normal;
+                font-size: {fontSize}px; 
+                font-family: {svgFont.font.id};
+                line-height: {svgFont.calcLineHeight(fontSize)}px;
+                letter-spacing:{-fontSize * .009}px;
+                word-spacing:0px;
+                fill:#000000;
+                fill-opacity:1;
+                stroke:none;
+                stroke-width:0.26458332"
+              x={paddingX}
+              y={paddingY}
+              id="text12">
+              {#each textLines as line, i}
+                <tspan
+                  sodipodi:role="line"
+                  x={line.x}
+                  y={line.y}
+                  style="font-size:{fontSize*.3}px;stroke-width:0.26458332"
+                  id="tspan{i}">  
+                  {line.text}
+                </tspan>
+              {/each}
+            </text>
+          </g>
+        </svg>
+      </div>
     </div>
   </div>
 {/if}
@@ -121,11 +258,15 @@
     margin-top: 2rem;
     margin-bottom: 10rem;
   }
-  .editor {
+  .editor, .preview {
     color: #222;
     background-color: #fff;
     box-shadow: .4rem .4rem 1.1rem #888888;
     overflow: hidden;
     padding: 0;
+    margin-bottom: 5rem;
+  }
+  .editor:focus {
+    outline-color: transparent;
   }
 </style>
