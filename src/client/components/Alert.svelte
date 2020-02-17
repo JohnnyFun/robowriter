@@ -7,9 +7,9 @@
 </script>
 {#if msg}
   <div transition:slide class="alert alert-{type} alert-dismissible">
-    {@html msg.replace('\n', '<br>')}
     <button type="button" class="close" aria-label="Close" on:click={onClose}>
       <span aria-hidden="true">&times;</span>
     </button>
+    {@html msg.replace('\n', '<br>')}
   </div>
 {/if}

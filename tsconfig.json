@@ -5,7 +5,7 @@ https://code.visualstudio.com/docs/languages/jsconfig
 */
 {
 	"compilerOptions": {
-		"allowJs": true, // basically makes it a jsconfig.json file
+		"allowJs": true,
 		"baseUrl": ".",
 		"target": "esnext",
 		"moduleResolution": "node",

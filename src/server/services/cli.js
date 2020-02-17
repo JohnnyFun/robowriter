@@ -1,4 +1,5 @@
 // wrapper for calling command line interfaces
+const { spawn } = require('child_process')
 module.exports = function(cli, args, onData) {
   let errored = false
   let cliProcess = spawn(cli, args)

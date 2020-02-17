@@ -3,9 +3,8 @@ wrapper for the axidraw cli (same software inkscape uses to connect to axidraw--
 docs: https://axidraw.com/doc/py_api/"
 see also: https://evilmadscience.s3.us-east-1.amazonaws.com/dl/ad/private/AxiDraw_Merge_v25_G.pdf
 */
-const cli = require('services/cli')
-const fs = require('fs')
-const path = require('path')
+const cli = require('./cli')
+const { createTempFile, readTempFile, delTempFile, resolveTempFileName } = require('./tempfiles')
 const { isEmpty } = require('../../shared/string-utils')
 let axidrawCLIProcess = null // for now, only ever running one instance of axidraw. store an array if need to run multiple. and pass an id via websocket to specify which instance you want to abort for instance
 
@@ -38,22 +37,20 @@ module.exports.print = function print(opts, onData) {
     onData({ error: err.stack })
   }
   if (isEmpty(opts.inputFile)) return handleErr(new Error('opts.inputFile is required'))
-  const inputFile = path.resolve(__dirname, `./${new Date().getTime()}.svg`)
-  fs.writeFile(inputFile, opts.inputFile, 'utf8', err => {
-    if (err) return handleErr(err)
-    const removeTempFile = () => {
-      fs.unlink(inputFile, err => {
-        if (err) return handleErr(err)
+  const inputFile = `./${new Date().getTime()}-printing.svg`
+  createTempFile(inputFile, opts.inputFile)
+    .then(() => {
+      _execute({
+        ...opts,
+        inputFile: resolveTempFileName(inputFile)
+      }, d => {
+        if (d.done) {
+          // delTempFile(inputFile).catch(handleErr)
+        }
+        onData(d)
       })
-    }
-    _execute({
-      ...opts,
-      inputFile
-    }, d => {
-      if (d.done) removeTempFile()
-      onData(d)
     })
-  })
+    .catch(handleErr)
 }
 
 module.exports.abort = function abort() {
@@ -86,13 +83,28 @@ function _execute(opts, onData) {
     const isError = data.error != null || /Failed|No named AxiDraw units located|Input file required/i.test(data)
     if (isError) {
       errored = true
-      onData({ error: data.error || data.info })
+      onData({ error: data.error || data.info, done: data.done })
     }
     const isSuccess = true // TODO: make this more accurate when you play with the real machine...
     if (isSuccess) {
-      onData({ info: data.info, connected: true })
+      onData({ info: data.info, connected: true, done: data.done })
     } else {
-      onData({ info: data.info })
+      onData({ info: data.info, done: data.done })
     }
   })
+}
+
+function _convertOptsToCmdArgs(opts) {
+  if (opts == null) return []
+  let cmdOpts = []
+  if (opts.inputFile) {
+    // input file is not a named option--you simply pass the name of the file as the first argument to axidraw cli
+    cmdOpts.push(opts.inputFile)
+    opts.inputFile = undefined
+  }
+  cmdOpts = cmdOpts.concat(Object.keys(opts)
+    .filter(opt => opts[opt] != null)
+    .map(opt => [`--${opt}`, `${opts[opt]}`])
+    .reduce((a,b) => a.concat(b), []))
+  return cmdOpts
 }

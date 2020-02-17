@@ -2,10 +2,7 @@
   import { tick } from 'svelte'
   import dayjs from 'dayjs'
 	import GlobalErrors from 'components/GlobalErrors'
-  // TODO: get variance stuff that hershey advanced apparently does:
-  //       hershey's function is "to replace the text in your document with paths from the selected SVG font" https://cdn.evilmadscientist.com/dl/ad/public/HersheyText_v30r5.pdf 
-  //       so this app's client-side functionality basically does what hershey does, just less setup
-	import localstorage from 'services/local-storage'
+  import localstorage from 'services/local-storage'
 	import Settings from 'components/Settings'
 	import MenuBottom from 'components/MenuBottom'
 	import Btn from 'components/Btn'
@@ -20,12 +17,15 @@
 
   const key = 'draft'
   let svgContainerEl
+  let svgPreviewContainerEl
+  let previewEl
   let letter = get('draft') || ''
   let svgFont = null
-  let printing = false
-  let currentPrintPathIndex = -1 // TODO: depending on what axidraw cli shows as it's drawing, I might be able to re-implement this
   let settings = {}
   let textLines = []
+  let awaitingPreview = false
+  let printing = false
+  let preview = null
 
   init()
 
@@ -48,8 +48,6 @@
   $: paddingYMM = inchesToMM(paddingYInches)
 
   $: lineHeight = svgFont ? pixelsToMM(svgFont.calcLineHeight(fontSize)) : 0
-  // $: maxLines = Math.ceil((height - paddingY*2) / lineHeight/2)
-  // $: console.log('maxLines', maxLines)
 
   $: if (letter) cleanLetter()
 
@@ -102,49 +100,76 @@
   async function cleanLetter() {
     await tick() // so cursor stays put while typing
     letter = letter.replace('<div><br', '<div class="line-break"><br')
-    console.log('replaced...')
     // TODO: wrap acronyms in something that tells hershey to use the other font temporarily?
   }
 
   async function init() {
-    websocket.on('print', msg => {
+    websocket.on('print', async msg => {
       msg = JSON.parse(msg)
       if (msg.error) {
-        console.error(msg.error)
         errors.add(msg.error)
+        awaitingPreview = false
+        printing = false
+        document.body.scrollIntoView({behavior: "smooth"})
       }
-      if (msg.info) console.log(msg.info)
-      if (msg.connected) connected.set(true)
+      // if (msg.info) console.log(msg.info)
+      if (msg.preview) {
+        preview = msg.preview
+        awaitingPreview = false
+        await tick()
+        if (previewEl) previewEl.scrollIntoView({behavior: "smooth"})
+      }
+      if (msg.donePrinting) {
+        printing = false
+      }
     })
     const svg = await getPrintFont()
     svgFont = new SVGFont(svg)
   }
 
-  function abortJob() {
+  function abort() {
     websocket.emit('abort', opts)
   }
 
-  async function printLetter(opts = {}) {
+  function previewLetter(opts = {}) {
     if (isEmpty(letter)) {
       errors.add('Type a letter')
       return
     }
-    websocket.emit('print', { 
+    awaitingPreview = true
+    websocket.emit('preview', { 
       inputFile: svgContainerEl.innerHTML
+    })
+  }
+
+  async function printLetter(opts = {}) {
+    if (isEmpty(preview)) throw new Error('Preview not rendered')
+    printing = true
+    websocket.emit('print', {
+      inputFile: preview
     })
   }
 </script>
 
+<Settings onChange={s => settings = s} />
+<GlobalErrors />
 <MenuBottom>
+  <Btn icon="eye" on:click={e => previewLetter()} disabled={awaitingPreview}>
+    {#if awaitingPreview}
+      Rendering preview...
+    {:else}
+      {#if preview != null}Update{:else}Print{/if} preview
+    {/if}
+  </Btn>
+  {#if preview != null}
+    <Btn icon="print" on:click={e => printLetter()} disabled={printing}>
+      {#if printing}Printing...{:else}Print{/if}
+    </Btn>
+  {/if}
   {#if printing}
-    <Btn icon="pause-circle" class="warning" on:click={abortJob}>Abort</Btn>
-  {:else}
-    <!--TODO: server should initially send back both hershey preview AND path preview. Ability to toggle to see both in a modal-->
-    <Btn icon="print" on:click={e => printLetter()}>Print</Btn>
+    <Btn icon="abort" on:click={e => abort()}>Abort</Btn>
   {/if}
 </MenuBottom>
-<Settings onChange={s => settings = s} />
-<!-- <GlobalErrors /> -->
 <!-- TODO: calculate chars per line and max lines based on font-size, maring-top/maring-bottom, and height/width -->
 <!-- and then you can accurately generate text and line break svgs like inkscape and also add a num char limit shown at bottom as they type and prevent them from typing any more and warn when pasted in text overflowed (make them dismiss the error)-->
 <!-- TODO: more settings: 
@@ -165,11 +190,16 @@
           font-size: {fontSize}px; 
           font-family: {svgFont.font.id};
           line-height: {svgFont.calcLineHeight(fontSize)}px;"></div>
+      {#if preview != null}
+        <h1 class="center" bind:this={previewEl}>Hershey advanced preview</h1>
+        <div bind:this={svgPreviewContainerEl} class="preview">
+          {@html preview}
+        </div>
+      {/if}
         
-      <div class="preview" style="width: {width}px; height: {height}px;">
-        <!-- this generated svg can be opened in inkscape so you can use inkscape tooling if need be prior to printing -->
+      <!-- this generated svg can be opened in inkscape so you can use inkscape tooling if need be prior to printing -->
+      <div class="preview" style="visibility: hidden; width: {width}px; height: {height}px;" bind:this={svgContainerEl}>
         <svg
-          bind:this={svgContainerEl}  
           xmlns:dc="http://purl.org/dc/elements/1.1/"
           xmlns:cc="http://creativecommons.org/ns#"
           xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -270,5 +300,8 @@
   }
   .editor:focus {
     outline-color: transparent;
+  }
+  .center {
+    text-align: center;
   }
 </style>
