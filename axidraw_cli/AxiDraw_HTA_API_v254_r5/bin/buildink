@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# Automates the building of the AxiDraw pkg for Inkscape users.
+# Most importantly, it pulls in pip dependencies to be included in the final package.
+# pip and python 2 must already be installed and the computer must be connected to the internet.
+# By default, this script uses whatever version of python is current on your computer.
+# You can specify a different python version by inputting the location of that version, e.g.:
+#     > buildink --python /usr/bin/python2
+# By default, this script outputs to axidraw_for_inkscape.zip. To change:
+#     > buildink --output custom_output_file.zip
+# run from a directory that has clean clones of git repos
+# AxiCli, AxiDraw-Internal, hershey-text, and plotink, e.g.:
+#     > git clone <AxiCli git repo>
+#     > git clone <AxiDraw-Internal git repo>
+#     > git clone <plotink git repo>
+#     > git clone <hershey-text git repo>
+#     > AxiCli/bin/buildink
+# Some of those repos are password protected, which is why I didn't include this step in the script
+
+set -e # exit on error
+
+# constants
+BUILDDIR=axidraw_for_inkscape
+
+# defaults
+python_executable=python
+output_file=axidraw_for_inkscape.zip
+
+# assign command line params
+while [ "$1" != "" ]; do
+      case $1 in
+           -p | --python )      shift
+                                python_executable=$1
+                                ;;
+           -o | --output )      shift
+                                output_file=$1
+                                ;;
+      esac
+      shift
+done
+
+# validate params
+python_version=`$python_executable --version 2>&1`
+if [ "${python_version:7:1}" != "2" ]; then
+   echo "The current python version is $python_version."
+   echo "Currently, inkscape is only compatible with Python 2."
+   echo "Please make sure you are using Python 2 or specify where to find a python 2 version, e.g.:"
+   echo "    buildink /usr/bin/python2"
+   exit 1
+fi
+
+# begin
+rm --recursive --force $BUILDDIR
+mkdir $BUILDDIR
+
+# make a venv
+pip --quiet install virtualenv
+virtualenv $BUILDDIR/venv -p $python_executable
+source $BUILDDIR/venv/bin/activate
+
+pip --quiet install AxiCli/
+
+# pip installed the dependencies into $BUILDDIR/venv/lib/python*/site-packages
+install_location="$BUILDDIR/venv/lib/python*/site-packages"
+
+# remove the python libs we don't want (auto installed by pip/virtualenv)
+for name in "easy_install" "pip" "pkg_resources" "setuptools" "wheel" "pyaxidraw" "axicli"; do
+    rm --recursive --force $install_location/$name*
+done
+
+mkdir $BUILDDIR/axidraw_deps
+touch $BUILDDIR/axidraw_deps/__init__.py
+for file in $(ls $install_location/* --directory); do
+  cp --recursive $file $BUILDDIR/axidraw_deps
+done
+
+deactivate # not in the virtualenv anymore
+rm --recursive --force $BUILDDIR/venv
+
+# a few of the AxiDraw-Internal files are not to be included. Delete them.
+for prefix in axidraw_merge axidraw_sysreport; do
+ rm -f AxiDraw-Internal/extensions/$prefix*
+done
+
+for dir in AxiDraw-Internal/extensions plotink/libraries hershey-text/hershey-text; do
+ cp --recursive $dir/* $BUILDDIR
+done
+
+rm --force $output_file # remove what was there before (e.g. a previous build)
+find . -type f -name *.pyc -exec rm -f {} \; # remove all those nasty pyc files littering up the dir
+
+zip --quiet --recurse-paths $output_file $BUILDDIR/*
+
+rm --recursive --force $BUILDDIR
+
+echo "Built into $output_file"

@@ -1,0 +1,18 @@
+# TODO: setup so debug works too: https://code.visualstudio.com/docs/containers/debug-common (otherwise, just debug from the host machine works fine)
+version: '3'
+
+services:
+  application:
+    image: nikolaik/python-nodejs:python3.8-nodejs13
+    volumes: 
+      - .:/app
+    ports:
+      - "5000:5000"
+      - "5002:5002"
+    command: bash -c "
+        cd /app && 
+        npm i && 
+        pip install /app/axidraw_cli/AxiDraw_HTA_API_v254_r5 &&
+        cd /app &&
+        npm start 
+      "

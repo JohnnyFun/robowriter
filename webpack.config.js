@@ -61,6 +61,7 @@ module.exports = {
 	devServer: {
 		contentBase: resolveDist(),
 		hot: false,
+		host: "0.0.0.0",
 		port: ports.client
 	}
 }

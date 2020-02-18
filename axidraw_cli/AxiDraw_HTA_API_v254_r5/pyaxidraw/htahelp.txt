@@ -1,0 +1,244 @@
+Hershey Text Advanced Command Line Interface (CLI) Help	
+
+=== Introduction: ===
+
+This python application is a stand-alone implementation of 
+Hershey Text Advanced, written in support of AxiDraw and other plotters by
+Evil Mad Scientist Laboratories.
+
+Please refer to the Hershey Advanced User Guide for a detailed description
+of how this software works and the behaviors of the different parameters.
+The utility modes, to generate font tables and character glyph tables,
+are not presently implemented within this CLI tool.
+
+Please note that this CLI tool is in beta testing, and its interfaces and
+options may change from one version to the next. If you find things that
+do not work, *please* let us know about them.
+
+
+=== Basic use: ===
+
+
+
+If installed as normally with pip, usage is as follows:
+
+General usage:
+	hta [OPTIONS] INPUT [OUTPUT]
+
+Example, to convert a file named filename.svg, with output file output.svg
+	hta filename.svg output.svg
+
+You can also use:
+    python -m hta [OPTIONS] INPUT [OUTPUT]
+
+
+If working in the directory with hta.py, you can use:
+	python hta.py [OPTIONS] INPUT [OUTPUT]
+
+
+A file input is required syntax.  An example file, "AxiDraw_trivial.svg",
+containing plain text, is provided in the test/assets/ directory of the download.
+
+
+
+=== Ways of Setting Options ===
+
+Many option defaults can be set from within the hta_conf.py file. 
+
+A superset of these options can be set using CLI options, detailed in the next section.
+
+
+
+The order of preference is follows:
+
+(A) Parameter values specified in the file itself (as in, by layer names) overrule
+those specified either by the command line or in the hta_conf.py file. At present,
+no such commands exist, and so this functionality is reserved for future use.
+
+(B) Parameter values specified on the command line overrule those in the hta_conf.py file.
+
+
+Please note that option values and settings that you select from within the Inkscape GUI
+are NOT consulted and do not affect operation of this routine from the CLI.
+
+
+=== List of Command Line Options  ===
+
+
+
+=== Description of Command Line Options ===
+
+
+One or more options may be specified with a --parameterName=parameterValue syntax
+
+Specify only one value for each parameter name that you choose to specify. For parameters
+that you do not specify, the default will be used. For most parameters, the default value
+is set in the hta.py file and may be changed there so that you do not need to
+specify each option on the command line.
+
+
+Example command to convert a file:
+	hta --fontface=EMSBrush inputFile.svg outputFile.svg
+
+
+--fontface 
+	Specify the font to be used. This should be the name of the file in the
+	svg_fonts directory (less ".svg"), or "other".
+	
+	Recommended handwriting-like fonts are as follows:
+	
+	"EMSAllure			-->		EMS Allure
+	"EMSBird			-->		EMS Bird
+	"EMSBirdSwashCaps	-->		EMS Bird Swash Caps
+	"EMSBrush			-->		EMS Brush
+	"EMSCapitol			-->		EMS Capitol
+	"EMSCasualHand		-->		EMS Casual Hand
+	"EMSDecorousScript	-->		EMS Decorous Script
+	"EMSDelight			-->		EMS Delight
+	"EMSDelightSwashCaps -->	EMS Delight Swash Caps
+	"EMSElfin			-->		EMS Elfin
+	"EMSFelix			-->		EMS Felix
+	"EMSInvite			-->		EMS Invite
+	"EMSLeague			-->		EMS League
+	"EMSLittlePrincess	-->		EMS Little Princess
+	"EMSNeato			-->		EMS Neato
+	"EMSPancakes		-->		EMS Pancakes
+	"EMSPepita			-->		EMS Pepita
+	"EMSQwandry			-->		EMS Qwandry
+	"EMSSociety			-->		EMS Society
+	"EMSSwiss			-->		EMS Swiss
+	"EMSTech			-->		EMS Tech
+	
+	Example command to convert a file, using a specified font face:	
+	hta --fontface="EMSCasualHand" filename.svg output.svg
+
+
+--other
+	Optional other font name or path to use. Please see user guide for
+	more about font names and paths. 
+
+    Example command to render text in a specified SVG font, with size defects enabled:
+    hta --fontface=other --otherfont=/path/to/fontname.svg --sizeVar=20 --enableDefects=True filename.svg output.svg
+
+    If fontname.svg in this context is a Scriptalizer-compatible SVG font from
+    Quantum Enterprises, then it will be automatically processed just as it would be in
+    the GUI version of Hershey Advanced.
+
+
+--preserve
+	Specify whether the original editable text will be preserved in the document.
+	
+	true	- Leave original text in place.
+	false	- Remove original text when converting. [DEFAULT; set in hta_conf.py file]
+
+
+	Example command to convert a file, preserving the original editable text in the output file:
+	hta --preserve=true filename.svg output.svg
+
+
+--letterSpacing
+	Override spacing between letters
+
+	This value is expressed as a percentage of the normal horizontal spacing between letters.
+
+	Allowed values: Integers from 50 to 400. Default: 100; set in hta_conf.py file
+
+
+	Example:
+	hta --letterSpacing=120 filename.svg output.svg
+
+
+--wordSpacing
+	Override spacing between words
+
+	This value is expressed as a percentage of the normal horizontal spacing between letters.
+
+	Allowed values: Integers from 50 to 600. Default: 100; set in hta_conf.py file
+
+
+	Example:
+	hta --wordSpacing=150 filename.svg output.svg
+
+
+
+--enableDefects
+	Specify whether to enable the addition of handwriting-like defects to the text layout.
+		
+	True	- Enable handwriting-like text defects.
+	False	- Disable handwriting-like text defects. [DEFAULT; set in hta_conf.py file]
+
+
+	Example command to convert a file, enabling handwriting-like defects:
+	hta --enableDefects=True filename.svg output.svg
+
+
+
+--baselineVar
+	Variation in text baseline, when enableDefects is True
+
+	This value is expressed as a relative percentage in the range 0 to 100.
+
+	Allowed values: Integers from 0 to 100. Default: 15; set in hta_conf.py file
+
+
+	Example:
+	hta --enableDefects=True --baselineVar=50 filename.svg output.svg
+
+
+
+--indentVar
+	Variation in text indent, when enableDefects is True
+
+	This value is expressed as a relative percentage in the range 0 to 100.
+
+	Allowed values: Integers from 0 to 100. Default: 15; set in hta_conf.py file
+
+
+	Example:
+	hta --enableDefects=True --baselineVar=50 --indentVar=50 filename.svg output.svg
+
+
+
+--kernVar
+	Variation in text kerning, when enableDefects is True
+
+	This value is expressed as a relative percentage in the range 0 to 100.
+
+	Allowed values: Integers from 0 to 100. Default: 15; set in hta_conf.py file
+
+
+	Example:
+	hta --enableDefects=True --kernVar=50 --indentVar=50 filename.svg output.svg
+
+
+--sizeVar
+	Variation in text size, when enableDefects is True
+
+	This value is expressed as a relative percentage in the range 0 to 100.
+
+	Allowed values: Integers from 0 to 100. Default: 15; set in hta_conf.py file
+
+
+	Example:
+	hta --enableDefects=True --sizeVar=20 --indentVar=30 filename.svg output.svg
+
+
+--rSeed
+	Optional random seed, used in generating of handwriting-like defects.
+	
+	This value is a floating point number, with at maximum 2 places of precision past the decimal.
+	Default value: 1.00
+	
+	If default value (1) is left in place, execution time will be used
+	as the random seed, calculated as round(time.time() * 100)/100.
+	However, you can override this and provide your own seed in cases where it is necessary to
+	use the same random seed repeatedly. If Hershey Text Advanced is called twice with the
+	same random seed, it should produce the same output.
+	 
+	Example:
+	hta --enableDefects=True --sizeVar=20 --rSeed=30.01 filename.svg output.svg
+
+
+
+
+~~~ Copyright 2019 Windell H. Oskay, Evil Mad Scientist Laboratories ~~~

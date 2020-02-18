@@ -57,6 +57,7 @@
   $: letter, svgFont, getTextLines()
 
   $: svgfilename = `robowriter-letter-${dayjs().format('YYYY-MM-DD_HH-mm')}.svg`
+  $: previewsReady = preview !== null && axidrawPreview !== null
 
   function getTextLines() {
     if (svgFont == null) return []
@@ -181,10 +182,10 @@
     {#if awaitingPreview}
       Rendering preview...
     {:else}
-      {#if preview != null}Update{:else}Print{/if} preview
+      {#if previewsReady}Update{:else}Print{/if} preview
     {/if}
   </Btn>
-  {#if preview != null}
+  {#if previewsReady}
     <Btn icon="print" on:click={e => printLetter()} disabled={printing}>
       {#if printing}Printing...{:else}Print{/if}
     </Btn>
@@ -213,7 +214,7 @@
           font-size: {fontSize}px; 
           font-family: {svgFont.font.id};
           line-height: {svgFont.calcLineHeight(fontSize)}px;"></div>
-      {#if preview != null && axidrawPreview != null}
+      {#if previewsReady}
         <div class="center p-4" bind:this={previewEl}>
           <h1>Hershey advanced preview</h1>
           <Btn on:click={e => showPaths = !showPaths} icon="edit">
