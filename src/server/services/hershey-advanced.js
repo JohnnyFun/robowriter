@@ -16,9 +16,20 @@ module.exports.convertTextToPaths = function convertTextToPaths(opts, onData) {
   if (isEmpty(opts.inputFile)) return handleErr(new Error('opts.inputFile is required'))
   const inputFile = `./${new Date().getTime()}.svg`
   const outputFile = `${inputFile.replace(/\.svg$/, '')}-hersheyified.svg`
+
+  // see hershey-cli-help.txt for detailed explanation of these
+  const defects = [
+    '--enableDefects=True',
+    '--baselineVar=25',
+    '--indentVar=25',
+    '--kernVar=25',
+    '--sizeVar=20',
+    // '--rSeed=1.00'
+  ]
+
   createTempFile(inputFile, opts.inputFile).then(() => {
-    // TODO: client-side should pass in enableDefects=true and values to go with it (see hershey-cli-help.txt) values and store them in localstorage settings
     let args = [
+      ...defects,
       '--fontface=other',
       `--otherfont=${path.resolve(__dirname, '../', fonts.QEMeganRikliCAP)}`,
       resolveTempFileName(inputFile),
