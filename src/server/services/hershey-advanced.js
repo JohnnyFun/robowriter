@@ -20,18 +20,18 @@ module.exports.convertTextToPaths = function convertTextToPaths(opts, onData) {
   // see hershey-cli-help.txt for detailed explanation of these
   const defects = [
     '--enableDefects=True',
-    '--baselineVar=25',
-    '--indentVar=25',
-    '--kernVar=25',
-    '--sizeVar=20',
-    // '--rSeed=1.00'
+    '--baselineVar=15', // default 15
+    '--indentVar=15', // default 15
+    '--kernVar=15', // default 15
+    '--sizeVar=15', // default 15
+    // '--rSeed=1.00' // default random seed it fine--note hitting "Update preview" will give you a new random defects rendering, which might actually be handy if you don't like the first one
   ]
 
   createTempFile(inputFile, opts.inputFile).then(() => {
     let args = [
       ...defects,
       '--fontface=other',
-      `--otherfont=${path.resolve(__dirname, '../', fonts.QEMeganRikliCAP)}`,
+      `--otherfont=${path.resolve(__dirname, '../', fonts.QEMeganRikli)}`,
       resolveTempFileName(inputFile),
       resolveTempFileName(outputFile)
     ]

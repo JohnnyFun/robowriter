@@ -11,8 +11,7 @@ services:
       - "5002:5002"
     command: bash -c "
         cd /app && 
-        npm i && 
         pip install /app/axidraw_cli/AxiDraw_HTA_API_v254_r5 &&
-        cd /app &&
+        npm i && 
         npm start 
       "

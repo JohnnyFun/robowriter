@@ -3,7 +3,7 @@ import errors from 'stores/global-errors'
 
 const getAsset = name => fetch(urls.server + `/assets/latest/${name}`).then(r => r.text())
 
-export const getPrintFont = () => getAsset('QEMeganRikliCAP.svg') 
+export const getPrintFont = () => getAsset('QEMeganRikli.svg') 
 export const getAxiDrawMachines = () => fetch(urls.server + '/api/axidrawMachines').then(handleApiResponse)
 
 async function handleApiResponse(res) {
