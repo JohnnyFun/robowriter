@@ -1,15 +1,20 @@
 <script>
+	import Btn from 'components/Btn'
   import { get, set } from 'services/local-storage'
 
   export let onChange
 
   const key = 'settings'
-  let settings = {
+  const defaultSettings = {
     fontSize: 35,
     heightInches: 11,
     widthInches: 8.5,
     paddingYInches: 1,
-    paddingXInches: .8,
+    paddingXInches: .8
+  }
+
+  let settings = {
+    ...defaultSettings,
     ...get(key)
   }
 
@@ -18,6 +23,10 @@
   function settingsChanged() {
     set(key, settings)
     onChange(settings)
+  }
+
+  function resetDefault(e) {
+    settings = { ...defaultSettings }
   }
 </script>
 
@@ -64,6 +73,9 @@
     <div class="input-group-append">
       <span class="input-group-text">Pixels</span>
     </div>
+  </div>
+  <div class="input-group mb-3 ml-3">
+    <Btn icon="refresh" on:click={resetDefault}>Reset default</Btn>
   </div>
 </div>
 
