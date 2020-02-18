@@ -6,14 +6,27 @@ see also: https://evilmadscience.s3.us-east-1.amazonaws.com/dl/ad/private/AxiDra
 const cli = require('./cli')
 const { createTempFile, readTempFile, delTempFile, resolveTempFileName } = require('./tempfiles')
 const { isEmpty } = require('../../shared/string-utils')
-let axidrawCLIProcess = null // for now, only ever running one instance of axidraw. store an array if need to run multiple. and pass an id via websocket to specify which instance you want to abort for instance
+let axidrawCLIPrintProcesses = {} // could start multiple print jobs with multiple machines
+
+module.exports.abort = function abort(jobId, onData) {
+  function killJob(jobId) {
+    if (axidrawCLIPrintProcess[jobId]) {
+      axidrawCLIPrintProcesses[jobId].kill()
+      axidrawCLIPrintProcesses[jobId] = null
+    }
+  }
+  if (jobId == null) Object.keys(axidrawCLIPrintProcesses).forEach(killJob)
+  else killJob(jobId)
+  onData({ aborted: true, jobId })
+}
 
 module.exports.getAxiDrawMachines = function getAxiDrawMachines() {
-  const opts = {
-    mode: 'manual',
-    manual_cmd: 'list_names'
-  }
-  return _executeAll(opts).then(d => {
+  // `axicli --mode manual --manual_cmd list_names`
+  const args = [
+    '--mode', 'manual',
+    '--manual_cmd', 'list_names'
+  ]
+  return _executeAll(args).then(d => {
     // TODO: parse list of names found
     const ports = []
     const auto = {
@@ -31,21 +44,33 @@ module.exports.getAxiDrawMachines = function getAxiDrawMachines() {
   })
 }
 
-module.exports.print = function print(opts, onData) {
+module.exports.printPreview = function printPreview(opts, onData) {
+  // `axicli input.svg -vg3 -o output.svg`, where input.svg is hersheyified
   const handleErr = err => {
     console.error(err)
     onData({ error: err.stack })
   }
   if (isEmpty(opts.inputFile)) return handleErr(new Error('opts.inputFile is required'))
-  const inputFile = `./${new Date().getTime()}-printing.svg`
+  const inputFile = resolveTempFileName(`${new Date().getTime()}-printing-preview-in.svg`)
+  const outputFile = resolveTempFileName(`${new Date().getTime()}-printing-preview-out.svg`)
   createTempFile(inputFile, opts.inputFile)
     .then(() => {
-      _execute({
-        ...opts,
-        inputFile: resolveTempFileName(inputFile)
-      }, d => {
+      const args = [
+        inputFile,
+        '-vg3',
+        '-o', 
+        outputFile
+      ]
+      _execute(args, d => {
         if (d.done) {
-          // delTempFile(inputFile).catch(handleErr)
+          delTempFile(inputFile).catch(handleErr)
+          readTempFile(outputFile)
+            .then(axidrawPreview => {
+              axidrawPreview = axidrawPreview.replace(/svg\:g/g, 'g') // not sure why axidraw cli outputs svg:g elements. they don't render, so fix just use normal "g" elements
+              onData({ axidrawPreview })
+              delTempFile(outputFile).catch(handleErr)
+            })
+            .catch(handleErr)
         }
         onData(d)
       })
@@ -53,15 +78,33 @@ module.exports.print = function print(opts, onData) {
     .catch(handleErr)
 }
 
-module.exports.abort = function abort() {
-  if (axidrawCLIProcess) axidrawCLIProcess.kill()
+module.exports.print = function print(opts, onData) {
+  // `axicli input.svg`, where input.svg is hersheyified
+  const handleErr = (err) => {
+    console.error(err)
+    onData({ error: err.stack })
+  }
+  // TODO: handle multiple machines--errors, info, and done should be tied to a machine id. UI should not allow printing to a machine that's printing--have to abort first
+  // if (isEmpty(opts.machine)) return handleErr(new Error('opts.machine is required')) 
+  if (isEmpty(opts.inputFile)) return handleErr(new Error('opts.inputFile is required'))
+  const inputFile = resolveTempFileName(`${new Date().getTime()}-printing.svg`)
+  createTempFile(inputFile, opts.inputFile)
+  .then(() => {
+      const args = [inputFile]
+      onData({ jobId: inputFile })
+      axidrawCLIPrintProcesses[inputFile] = _execute(args, d => {
+        onData(d)
+        if (d.done) delTempFile(inputFile).catch(handleErr)
+      })
+    })
+    .catch(handleErr)
 }
 
 // same as _execute but returns a promise with all output from the command
-function _executeAll(opts) {
+function _executeAll(args) {
   return new Promise((res, rej) => {
     let allData = []
-    _execute(opts, d => {
+    _execute(args, d => {
       allData.push(d.error ? d.error : d.info)
       if (d.done) {
         const allInfo = allData.join('\n')
@@ -76,14 +119,14 @@ function _executeAll(opts) {
  * @param opts {AxiDrawCLI options} https://axidraw.com/doc/cli_api/#options
  * @param onData ({ error: string, info: string, connected: bool }) => void
  */
-function _execute(opts, onData) {
-  let args = _convertOptsToCmdArgs(opts)
+function _execute(args, onData) {
   // available on the path since you have to pip install to install their cli--TODO: put into docker container with all dependencies
-  axidrawCLIProcess = cli('axicli', args, data => {
+  return cli('axicli', args, data => {
     const isError = data.error != null || /Failed|No named AxiDraw units located|Input file required/i.test(data)
     if (isError) {
       errored = true
       onData({ error: data.error || data.info, done: data.done })
+      return
     }
     const isSuccess = true // TODO: make this more accurate when you play with the real machine...
     if (isSuccess) {
@@ -92,19 +135,4 @@ function _execute(opts, onData) {
       onData({ info: data.info, done: data.done })
     }
   })
-}
-
-function _convertOptsToCmdArgs(opts) {
-  if (opts == null) return []
-  let cmdOpts = []
-  if (opts.inputFile) {
-    // input file is not a named option--you simply pass the name of the file as the first argument to axidraw cli
-    cmdOpts.push(opts.inputFile)
-    opts.inputFile = undefined
-  }
-  cmdOpts = cmdOpts.concat(Object.keys(opts)
-    .filter(opt => opts[opt] != null)
-    .map(opt => [`--${opt}`, `${opts[opt]}`])
-    .reduce((a,b) => a.concat(b), []))
-  return cmdOpts
 }

@@ -26,6 +26,9 @@
   let awaitingPreview = false
   let printing = false
   let preview = null
+  let axidrawPreview = null
+  let showPaths = false
+  let printJobs = {}
 
   init()
 
@@ -52,6 +55,8 @@
   $: if (letter) cleanLetter()
 
   $: letter, svgFont, getTextLines()
+
+  $: svgfilename = `robowriter-letter-${dayjs().format('YYYY-MM-DD_HH-mm')}.svg`
 
   function getTextLines() {
     if (svgFont == null) return []
@@ -115,11 +120,19 @@
       // if (msg.info) console.log(msg.info)
       if (msg.preview) {
         preview = msg.preview
+      }
+      if (msg.axidrawPreview) {
+        axidrawPreview = msg.axidrawPreview
+      }
+      if (preview && axidrawPreview) {
         awaitingPreview = false
         await tick()
         if (previewEl) previewEl.scrollIntoView({behavior: "smooth"})
       }
       if (msg.donePrinting) {
+        printing = false
+      }
+      if (msg.aborted) {
         printing = false
       }
     })
@@ -149,11 +162,21 @@
       inputFile: preview
     })
   }
+
+  function downloadSvg() {
+    let link = document.createElement('a')
+    link.download = svgfilename
+    const svg = svgContainerEl.innerHTML
+    const blob = new Blob([svg], {type: 'image/svg+xml'})
+    link.href = window.URL.createObjectURL(blob);
+    link.click();
+  }
 </script>
 
 <Settings onChange={s => settings = s} />
 <GlobalErrors />
 <MenuBottom>
+  <Btn icon="download" on:click={e => downloadSvg()}>Download Inkscape SVG</Btn>
   <Btn icon="eye" on:click={e => previewLetter()} disabled={awaitingPreview}>
     {#if awaitingPreview}
       Rendering preview...
@@ -190,10 +213,15 @@
           font-size: {fontSize}px; 
           font-family: {svgFont.font.id};
           line-height: {svgFont.calcLineHeight(fontSize)}px;"></div>
-      {#if preview != null}
-        <h1 class="center" bind:this={previewEl}>Hershey advanced preview</h1>
+      {#if preview != null && axidrawPreview != null}
+        <div class="center p-4" bind:this={previewEl}>
+          <h1>Hershey advanced preview</h1>
+          <Btn on:click={e => showPaths = !showPaths} icon="edit">
+            {#if showPaths}Hide{:else}Show{/if} axidraw path
+          </Btn>
+        </div>
         <div bind:this={svgPreviewContainerEl} class="preview">
-          {@html preview}
+          {@html showPaths ? axidrawPreview : preview}
         </div>
       {/if}
         
@@ -213,7 +241,7 @@
           height="{heightMM}mm"
           width="{widthMM}mm"
           inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
-          sodipodi:docname="robowriter-letter-{dayjs().format('YYYY-MM-DD_HH-mm')}.svg">
+          sodipodi:docname="{svgfilename}">
           <sodipodi:namedview
             id="base"
             pagecolor="#ffffff"

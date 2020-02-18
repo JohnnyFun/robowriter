@@ -4,6 +4,7 @@ wrapper for the hershey advanced cli
 const cli = require('./cli')
 const path = require('path')
 const { createTempFile, readTempFile, delTempFile, resolveTempFileName } = require('./tempfiles')
+const axidraw = require('./axidraw')
 const { isEmpty } = require('../../shared/string-utils')
 const { fonts } = require('../../shared/constants')
 
@@ -28,8 +29,9 @@ module.exports.convertTextToPaths = function convertTextToPaths(opts, onData) {
         delTempFile(inputFile).catch(handleErr)
         onData(d)
         readTempFile(outputFile)
-          .then(preview => {
-            onData({ preview })
+          .then(hersheyified => {
+            onData({ preview: hersheyified })
+            axidraw.printPreview({ inputFile: hersheyified }, onData)
             delTempFile(outputFile).catch(handleErr)
           })
           .catch(handleErr)
