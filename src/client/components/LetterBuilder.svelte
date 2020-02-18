@@ -45,12 +45,13 @@
   $: paddingX = inchesToPixels(paddingXInches)
   $: paddingY = inchesToPixels(paddingYInches)
 
+  $: fontSizeMM = pixelsToMM(fontSize)
   $: heightMM = inchesToMM(heightInches)
   $: widthMM = inchesToMM(widthInches)
   $: paddingXMM = inchesToMM(paddingXInches)
   $: paddingYMM = inchesToMM(paddingYInches)
 
-  $: lineHeight = svgFont ? pixelsToMM(svgFont.calcLineHeight(fontSize)) : 0
+  $: lineHeight = svgFont != null ? pixelsToMM(svgFont.calcLineHeight(fontSize)) : 0
 
   $: if (letter) cleanLetter()
 
@@ -71,7 +72,7 @@
     const unitsPerEm = svgFont.font.fontFace['units-per-em']
     const spaceCharWidth = unitsPerEm / 3
     const size = svgFont.calcSize(fontSize)
-    const maxLineWidth = width - paddingX*2
+    const maxLineWidth = width - paddingX*1.8 // not quite 2, so 
     paragraphs.forEach(lb => {
       const text = lb.innerText.replace(/\n/g, '')
       const words = text.split(/\s/).map(w => w + ' ') // not word boundary, since we want periods and commas to stay with their word, for instance // TODO: unit test this
@@ -88,7 +89,6 @@
           // enough room for this word
           currentLine += w
           currentLineWidth += wordWidth
-          if (i === words.length-1) lines.push({ text: currentLine, x, y })
         } else {
           // break to next line
           lines.push({ text: currentLine, x, y })
@@ -96,6 +96,7 @@
           currentLine = w
           currentLineWidth = wordWidth
         }
+        if (i === words.length-1) lines.push({ text: currentLine, x, y })
       }
       const yOffset = lines.length === 0 ? -fontSize*0.2857142857142857 : 0 // paragraph
       y += lineHeight + yOffset
@@ -226,7 +227,10 @@
         </div>
       {/if}
         
-      <!-- this generated svg can be opened in inkscape so you can use inkscape tooling if need be prior to printing -->
+      <!-- 
+        This generated svg is ultimately what's sent to hershey. 
+        It can also be opened in inkscape so you can use inkscape tooling if need be prior to printing, if needed
+      -->
       <div class="preview" style="visibility: hidden; width: {width}px; height: {height}px;" bind:this={svgContainerEl}>
         <svg
           xmlns:dc="http://purl.org/dc/elements/1.1/"
@@ -281,7 +285,7 @@
               xml:space="preserve"
               style="font-style:normal;
                 font-weight:normal;
-                font-size: {fontSize}px; 
+                font-size: {fontSizeMM}px; 
                 font-family: {svgFont.font.id};
                 line-height: {svgFont.calcLineHeight(fontSize)}px;
                 letter-spacing:{-fontSize * .009}px;
@@ -298,7 +302,7 @@
                   sodipodi:role="line"
                   x={line.x}
                   y={line.y}
-                  style="font-size:{fontSize*.3}px;stroke-width:0.26458332"
+                  style="font-size:{fontSizeMM}px;stroke-width:0.26458332"
                   id="tspan{i}">  
                   {line.text}
                 </tspan>

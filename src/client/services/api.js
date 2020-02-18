@@ -8,7 +8,7 @@ const getAsset = name => fetch(urls.server + `/assets/latest/${name}`).then(r =>
 //       and be sure printer does too when you swap to use engraving font at print time...but not sure
 //       but we only have one print svg font...missing one for the smoother/non-CAP font?
 
-export const getPrintFont = () => getAsset('QEMeganRikli.svg') 
+export const getPrintFont = () => getAsset('QEMeganRikliCAP.svg') 
 export const getAxiDrawMachines = () => fetch(urls.server + '/api/axidrawMachines').then(handleApiResponse)
 
 async function handleApiResponse(res) {
