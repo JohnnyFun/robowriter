@@ -120,7 +120,7 @@ function _executeAll(args) {
  * @param onData ({ error: string, info: string, connected: bool }) => void
  */
 function _execute(args, onData) {
-  // available on the path since you have to pip install to install their cli--TODO: put into docker container with all dependencies
+  // available on the path, since we ran `pip install .` to install their cli
   return cli('axicli', args, data => {
     const isError = data.error != null || /Failed|No named AxiDraw units located|Input file required/i.test(data)
     if (isError) {

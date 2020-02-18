@@ -18,8 +18,10 @@
   const key = 'draft'
   let svgContainerEl
   let svgPreviewContainerEl
+  let letterContentEditableEl
   let previewEl
-  let letter = get('draft') || ''
+  let letter = get(key) || ''
+  let letterTransformed = ''
   let svgFont = null
   let settings = {}
   let textLines = []
@@ -53,37 +55,44 @@
 
   $: lineHeight = svgFont != null ? pixelsToMM(svgFont.calcLineHeight(fontSize)) : 0
 
-  $: if (letter) cleanLetter()
-
-  $: letter, svgFont, getTextLines()
+  $: letter, svgFont, letterContentEditableEl, getTextLines()
 
   $: svgfilename = `robowriter-letter-${dayjs().format('YYYY-MM-DD_HH-mm')}.svg`
   $: previewsReady = preview !== null && axidrawPreview !== null
 
   function getTextLines() {
-    if (svgFont == null) return []
-    if (isEmpty(letter)) return []
-    const parser = new DOMParser()
-    const parsed = parser.parseFromString(letter, 'text/html')
-    const paragraphs = Array.from(parsed.querySelectorAll('.line-break'))
+    if (svgFont == null || letterContentEditableEl == null || isEmpty(letter)) return []
+    const text = letterContentEditableEl.innerText // cleans out the html, leaving newline characters. if sucks, just use a textarea instead of content editable
+    textLines = transformTextToLines(text)
+  }
+
+  function transformTextToLines(text) {
+    // build the data needed to construct svg paths to send to hershey (similar to as you type in inkscape)
+    text = text.replace(/\n\n/g, '\n') // doubles up line breaks
+    const paragraphs = text.split('\n')
     let x = paddingXMM
     let y = paddingYMM
     let lines = []
     const unitsPerEm = svgFont.font.fontFace['units-per-em']
     const spaceCharWidth = unitsPerEm / 3
     const size = svgFont.calcSize(fontSize)
-    const maxLineWidth = width - paddingX*1.8 // not quite 2, so 
+    // not quite x2, so it doesn't break onto new line too aggressively--a bit into the margin is fine and feels more natural
+    const maxLineWidth = width - (paddingX * 1.8)
     paragraphs.forEach(lb => {
-      const text = lb.innerText.replace(/\n/g, '')
-      const words = text.split(/\s/).map(w => w + ' ') // not word boundary, since we want periods and commas to stay with their word, for instance // TODO: unit test this
+      // not word boundary, since we want periods and commas to stay with their word, for instance
+      const words = lb.split(/\s/).map(w => w + ' ') 
       let currentLine = ''
       let currentLineWidth = 0
       for (let i = 0; i < words.length; i++) {
         const w = words[i]
+
         const wordWidth = Array.from(w).map(char => {
-          const charWidth = svgFont.glyphs[char]['horiz-adv-x'] || spaceCharWidth
+          // when text is pasted, we may not have all the characters, so warn so the character can be replaced
+          if (svgFont.glyphs[char] == null) console.warn(`Unknown character in your font: '${char}'`)
+          const charWidth = svgFont.glyphs[char] ? svgFont.glyphs[char]['horiz-adv-x'] || spaceCharWidth : spaceCharWidth
           return charWidth * size
         }).reduce((a,b) => a + b)
+
         const willConsume = currentLineWidth + wordWidth
         if (willConsume < maxLineWidth) {
           // enough room for this word
@@ -96,18 +105,14 @@
           currentLine = w
           currentLineWidth = wordWidth
         }
-        if (i === words.length-1) lines.push({ text: currentLine, x, y })
+        // if end of paragraph, add what's left
+        const isLastWord = i === words.length - 1
+        if (isLastWord) lines.push({ text: currentLine, x, y })
       }
       const yOffset = lines.length === 0 ? -fontSize*0.2857142857142857 : 0 // paragraph
       y += lineHeight + yOffset
     })
-    textLines = lines
-  }
-
-  async function cleanLetter() {
-    await tick() // so cursor stays put while typing
-    letter = letter.replace('<div><br', '<div class="line-break"><br')
-    // TODO: wrap acronyms in something that tells hershey to use the other font temporarily?
+    return lines
   }
 
   async function init() {
@@ -173,6 +178,23 @@
     link.href = window.URL.createObjectURL(blob);
     link.click();
   }
+
+  // Quick n dirty tests
+  // TODO: move into tests library later. the below tests depend on the svgFont being used and the padding/margin settings
+  function transformTextToLinesTests() {
+    const assert = (ctx, input, expected) => {
+      const result = JSON.stringify(transformTextToLines(input))
+      if (result !== JSON.stringify(expected)) console.error(Error(`FAIL ${ctx}\nRESULT: \n${result}\nExpected\n: ${expected}`))
+      console.log(`TEST ${ctx} passed`)
+    }
+    assert('basic', 'Hi there!', [{"text":"Hi there! ","x":20.32,"y":25.4}])
+    assert('new lines work', `Hi there,
+
+
+"Being Adam Parrish was a complicated thing"`, [{"text":"Hi there, ","x":20.32,"y":25.4},{"text":" ","x":20.32,"y":35.2180914984809},{"text":"\"Being Adam Parrish was a complicated thing\" ","x":20.32,"y":45.036182996961806}])
+  }
+  $: if (svgFont != null) transformTextToLinesTests()
+
 </script>
 
 <Settings onChange={s => settings = s} />
@@ -195,11 +217,9 @@
     <Btn icon="abort" on:click={e => abort()}>Abort</Btn>
   {/if}
 </MenuBottom>
-<!-- TODO: calculate chars per line and max lines based on font-size, maring-top/maring-bottom, and height/width -->
-<!-- and then you can accurately generate text and line break svgs like inkscape and also add a num char limit shown at bottom as they type and prevent them from typing any more and warn when pasted in text overflowed (make them dismiss the error)-->
 <!-- TODO: more settings: 
     - override lineheight ratio to font-size and character spacing ratio to font-size
-    - toggle auto-acronym?
+    - hershey defects
   -->
 {#if svgFont}
   <div class="paper-container">
@@ -207,6 +227,7 @@
       <div 
         class="editor" 
         contenteditable="true" 
+        bind:this={letterContentEditableEl}
         bind:innerHTML={letter}
         style="width: {width}px; 
           height: {height}px; 
@@ -230,6 +251,7 @@
       <!-- 
         This generated svg is ultimately what's sent to hershey. 
         It can also be opened in inkscape so you can use inkscape tooling if need be prior to printing, if needed
+        It can help to make it visible for debugging purposes (to confirm that content-editable text is transformed to svg as expected)
       -->
       <div class="preview" style="visibility: hidden; width: {width}px; height: {height}px;" bind:this={svgContainerEl}>
         <svg

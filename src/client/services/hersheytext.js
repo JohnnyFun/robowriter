@@ -1,5 +1,4 @@
-// TODO: not using this, but good for reference for now in case we need it. doesn't look like it implements the variance
-//        stuff that hershey advanced does though...
+// TODO: not using this, but good for reference for now in case we need it. It doesn't implement defects like the official python hershey advanced does (hta cli tool)
 
 /**
  * @file The node module for easily including the letter data or rendering text.

@@ -36,6 +36,10 @@
   - click "print"
   - machine should begin printing
 
+# Notes
+
+- Hershey-advanced allows specifying different fonts at the svg text element level, but robowriter currently only allows one font to be used. Sometimes acronyms look better in a different font, so if that comes up, we can add that functionality to robowriter. Workaround would be to download the inkscape svg from robowriter, open in inkscape and use hershey-advanced in there and then print from there.
+
 ## TODO: Write tests
 ## Tests
 

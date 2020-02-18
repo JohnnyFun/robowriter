@@ -33,8 +33,7 @@
     "client": "webpack-dev-server",
     "client:prod": "cross-env NODE_ENV=production webpack",
     "server": "nodemon ./src/server/index.js --watch ./src/server",
-    "server:prod": "cross-env NODE_ENV=production node ./src/server/index.js",
-    "test": "TODO: implement"
+    "server:prod": "cross-env NODE_ENV=production node ./src/server/index.js"
   },
   "repository": {
     "type": "git",
