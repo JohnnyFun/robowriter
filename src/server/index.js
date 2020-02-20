@@ -58,5 +58,5 @@ async function handleGetAxiDrawMachines(req, res) {
 function onNewSocketConnection(socket) {
   socket.on('preview', opts => convertTextToPaths(opts, msgObj => socket.emit('print', JSON.stringify(msgObj))))
   socket.on('print', opts => print(opts, msgObj => socket.emit('print', JSON.stringify(msgObj))))
-  socket.on('abort', (jobId = null) => abort(jobId, socket.emit('print', JSON.stringify(msgObj))))
+  socket.on('abort', (jobId = null) => abort(jobId, msgObj => socket.emit('print', JSON.stringify(msgObj))))
 }

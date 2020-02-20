@@ -9,13 +9,16 @@ const { isEmpty } = require('../../shared/string-utils')
 let axidrawCLIPrintProcesses = {} // could start multiple print jobs with multiple machines
 
 module.exports.abort = function abort(jobId, onData) {
+  const jobs = Object.keys(axidrawCLIPrintProcesses)
+  console.log(`Aborting ${jobId ? jobId : `all print jobs (${jobs.length})`}`)
   function killJob(jobId) {
     if (axidrawCLIPrintProcess[jobId]) {
       axidrawCLIPrintProcesses[jobId].kill()
       axidrawCLIPrintProcesses[jobId] = null
+      console.log(`Killed job ${jobId}`)
     }
   }
-  if (jobId == null) Object.keys(axidrawCLIPrintProcesses).forEach(killJob)
+  if (jobId == null) jobs.forEach(killJob)
   else killJob(jobId)
   onData({ aborted: true, jobId })
 }

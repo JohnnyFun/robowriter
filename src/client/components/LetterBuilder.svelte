@@ -153,7 +153,7 @@
     svgFont = new SVGFont(svg)
   }
 
-  function abort() {
+  function abort(opts = null) {
     websocket.emit('abort', opts)
   }
 

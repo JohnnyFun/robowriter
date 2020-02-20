@@ -83,8 +83,8 @@
     top: 1rem;
   }
 
-  .item {
+  /* .item {
     font-size: 1.3rem;
     padding: 1rem;
-  }
+  } */
 </style>
