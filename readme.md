@@ -1,3 +1,19 @@
+		○ TODO:
+			§ Major
+				§ Stop printing disabled when done
+				§ Pen up/down settings
+					§ Higher jig so pen is stabler
+					§ Up/down set in code
+					§ Maybe a process to calibrate
+						◊ Write same sentence over and over, slightly lowering the two settings with each one
+							} Give user ability to set range high to low to try and step
+								– Advanced settings gear area
+				§ Go to zero prior to printing
+					§ Look at code to determine how to reset to start position
+			§ minor
+				§ Link serial port from docker? 
+
+
 ## Description
 
   - build up an svg version of the letter with an svg font
@@ -5,7 +21,7 @@
 
 ## Run the app
 
-- Docker
+- Docker (use "no docker" instructions since docker container currently can't connect to the axidraw machine--probably need to expose a serial port to the container)
   - `docker-compose up`
     - does everything that the "No Docker" section does inside the docker container upon starting up
     - open http://localhost:5006/
