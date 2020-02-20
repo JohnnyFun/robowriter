@@ -14,5 +14,7 @@
 <style>
   .errors {
     position: fixed;
+    overflow: scroll;
+    max-height: 300px; /*some cli output seems to pring an empty chunk of svg...so error messages can get pretty long*/
   }
 </style>

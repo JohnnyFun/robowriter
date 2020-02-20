@@ -62,7 +62,13 @@
 
   function getTextLines() {
     if (svgFont == null || letterContentEditableEl == null || isEmpty(letter)) return []
-    const text = letterContentEditableEl.innerText // cleans out the html, leaving newline characters. if sucks, just use a textarea instead of content editable
+
+    // clear any preview rendered, so it's clear you're starting over the process and will need to re-render
+    preview = null
+    axidrawPreview = null
+
+    // extract only the text from the html, leaving newline characters. alternatively could simply use a textarea instead of content editable
+    const text = letterContentEditableEl.innerText 
     textLines = transformTextToLines(text)
   }
 
@@ -136,7 +142,7 @@
         await tick()
         if (previewEl) previewEl.scrollIntoView({behavior: "smooth"})
       }
-      if (msg.donePrinting) {
+      if (msg.done) {
         printing = false
       }
       if (msg.aborted) {

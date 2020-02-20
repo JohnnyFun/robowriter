@@ -29,7 +29,8 @@
 <div class="menu">
   <div class="menu-text">DPI: {dpi}</div>
   <div class="actions">
-    <DropMenu btnIcon="usb" label="Change connection">
+    <!-- holding off on multi-machine support since it might actually just make sense to have an instance of the app running at each machine instead of having to choose which machine to print to
+      <DropMenu btnIcon="usb" label="Change connection">
       {#if axiDrawMachines == null}
         <Loading />
       {:else}
@@ -52,7 +53,7 @@
           {#if i < axiDrawMachines.length-1}<div class="dropdown-divider"></div>{/if}
         {/each}
       {/if}
-    </DropMenu>  
+    </DropMenu>   -->
     <slot />
   </div>
 </div>
