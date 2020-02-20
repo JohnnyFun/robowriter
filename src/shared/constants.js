@@ -1,5 +1,5 @@
-const server = 5000
-const client = 5002
+const server = 5005
+const client = 5006
 const buildUrl = port => `http://localhost:${port}`
 
 module.exports = {

@@ -8,7 +8,7 @@
 - Docker
   - `docker-compose up`
     - does everything that the "No Docker" section does inside the docker container upon starting up
-    - open http://localhost:5002/
+    - open http://localhost:5006/
     - issues:
       - If using Docker "toolbox" for windows home addition, you're probably better off just running directly on the host machine. It's a pain to get everything working with the virtualbox instance that's used to get around not having hyper-v
 - No Docker
@@ -23,7 +23,7 @@
   - `npm i`
   - `npm start`
     - starts the webpack-dev-server and the express server, watching both for changes
-    - open http://localhost:5002/
+    - open http://localhost:5006/
 - Deployment
   - easiest would be to simply clone the repo on the machine that's connected to the axidraw via usb and make a shortcut to "start.sh" or "start.bat" on the homescreen
     - else, probably wouldn't be too tough to just wrap the app in an electron app and provide an installer and have it like a normal app on the computer
