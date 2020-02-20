@@ -10,8 +10,9 @@ services:
       - "5005:5005"
       - "5006:5006"
     command: bash -c "
-        cd /app && 
-        pip install /app/axidraw_cli/AxiDraw_HTA_API_v254_r5 &&
+        cd /app/axidraw_cli/AxiDraw_HTA_API_v254_r5 &&
+        pip install . &&
+        cd /app &&
         npm i && 
         npm start 
       "

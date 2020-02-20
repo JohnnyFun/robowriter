@@ -90,7 +90,12 @@ module.exports.print = function print(opts, onData) {
   const inputFile = resolveTempFileName(`${new Date().getTime()}-printing.svg`)
   createTempFile(inputFile, opts.inputFile)
   .then(() => {
-      const args = [inputFile]
+      const args = [
+        '--const_speed', // 'True', // important for smoothness?
+        '--pen_pos_up', '10',
+        '--pen_pos_down', '-2',
+        inputFile
+      ]
       onData({ jobId: inputFile })
       axidrawCLIPrintProcesses[inputFile] = _execute(args, d => {
         onData(d)
