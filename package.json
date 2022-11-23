@@ -9,7 +9,7 @@
     "dayjs": "^1.8.19",
     "express": "^4.17.1",
     "parse-svg-path": "^0.1.2",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.5.0",
     "svg-line-segments": "^1.0.0",
     "svg-linearize": "^1.1.0"
   },
